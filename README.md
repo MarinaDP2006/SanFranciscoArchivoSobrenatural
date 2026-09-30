@@ -1,1 +1,3 @@
 # SanFranciscoArchivoSobrenatural
+
+ELECTRON PARA PASAR DE COD A .EXE EN APLICACION
