@@ -119,7 +119,17 @@ Endpoints utilizados:
 - Panel reporter para consultar contratos y solicitar uno asociado a un incidente público.
 
 ## Solución de problemas
-
 - **No se pudo conectar con la API:** confirma que el backend esté disponible en la URL configurada en `API_BASE` y que el navegador tenga permiso CORS.
 - **No carga el mapa:** comprueba la conexión a Internet y que el CDN de Leaflet y los mapas de CARTO sean accesibles.
 - **Los módulos JavaScript no cargan:** inicia el servidor HTTP desde `archive-web` y entra por `http://localhost:5500`.
+
+# Cambios Necesarios:
+- API Local con Roles
+- Crear un servidor local con roles para autenticación.
+- Integrar Contratos y Monedero
+- Integrar funcionalidades de contratos y monedero.
+- Completar Modos y Navegación
+- Completar los modos y navegación de la aplicación.
+- Probar Seguridad y Responsividad
+- Probar la seguridad y la responsividad de la aplicación.
+- Subir a un Servidor como Netlify, y subir la aplicación a un servidor como Netlify.
