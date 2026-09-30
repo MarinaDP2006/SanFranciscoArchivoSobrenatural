@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>SAN FRANCISCO ARCHIVE // FEED MUNDIAL</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="css/terminal.css"/>
+  <link rel="stylesheet" href="css/map-dark.css"/>
+  <link rel="stylesheet" href="css/feed.css"/>
+</head>
+<body>
+  <header class="terminal-header">
+    <h1>SAN FRANCISCO ARCHIVE</h1>
+    <span class="blink">LIVE</span>
+  </header>
+
+  <main class="layout">
+    <section id="feed" class="feed"></section>
+    <section id="map" class="map"></section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import "./js/map.js";
+    import "./js/feed.js";
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+﻿* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #000;
+  color: #b8ffb8;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 14px;
+}
+.terminal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 20px; border-bottom: 1px solid #1f3f1f;
+  background: #050505;
+}
+.terminal-header h1 { font-size: 16px; letter-spacing: 4px; color: #7dff7d; }
+.blink { color: #ff3b3b; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,50% { opacity: 1 } 51%,100% { opacity: 0 } }
+.layout {
+  display: grid; grid-template-columns: 380px 1fr;
+  height: calc(100vh - 45px);
+}
+.feed { overflow-y: auto; padding: 16px; border-right: 1px solid #1f3f1f; }
+.map { width: 100%; height: 100%; background: #0a0a0a; }
+.card {
+  border: 1px solid #1f3f1f; padding: 10px; margin-bottom: 10px;
+  background: #080808;
+}
+.card .tipo { color: #ff3b3b; font-weight: bold; letter-spacing: 2px; }
+.card .lugar { color: #7dff7d; font-size: 12px; margin-top: 4px; }

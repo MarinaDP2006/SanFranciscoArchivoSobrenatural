@@ -1,0 +1,8 @@
+# Artefactos generados por Maven
+**/target/
+**/.LCK*
+
+# Configuración local de IDE
+.idea/
+**/.idea/
+*.iml
