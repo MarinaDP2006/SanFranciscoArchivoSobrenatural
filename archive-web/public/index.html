@@ -1,0 +1,154 @@
+﻿<!doctype html>
+<html lang="es">
+<body class="archive-home">
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <header class="site-header archive-header">
+    <a class="wordmark" href="#inicio" aria-label="San Francisco Archive, inicio">
+      <span class="wordmark-mark" aria-hidden="true">SFA</span>
+      <span class="wordmark-name">SAN FRANCISCO<br>ARCHIVE</span>
+    </a>
+    <div class="header-state"><span class="live-dot" aria-hidden="true"></span><span>RED DE OBSERVACIÓN</span></div>
+    <nav class="primary-nav" aria-label="Navegación principal">
+      <a href="#alcance">EL ARCHIVO</a>
+      <a href="#archivo">EXPEDIENTES</a>
+      <a href="#cartografia">CARTOGRAFÍA</a>
+      <a href="#acceso">ACCESO</a>
+    </nav>
+    <a class="header-link" href="login.html">ENTRAR <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="contenido">
+    <section id="inicio" class="hero" aria-labelledby="hero-title">
+      <img class="hero-image" src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=2000&q=88" alt="Vista de San Francisco desde la bahía" fetchpriority="high">
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="eyebrow hero-eyebrow"><span class="live-dot" aria-hidden="true"></span> OBSERVATORIO CIVIL · REGISTRO 01</p>
+        <h1 id="hero-title">SAN FRANCISCO<br><span>ARCHIVE</span></h1>
+        <p class="hero-lede">Un archivo abierto para aquello que no encaja en el informe ordinario.</p>
+        <p class="hero-note">Anomalías, señales y sucesos inexplicables documentados desde múltiples puntos del planeta.</p>
+        <div class="hero-actions">
+          <a class="action-primary" href="#archivo">EXPLORAR EXPEDIENTES <span aria-hidden="true">↘</span></a>
+          <a class="action-secondary" href="#alcance">CONOCER EL ARCHIVO</a>
+        </div>
+      </div>
+      <div class="hero-caption"><span>37°46' N · 122°25' W</span><span>ESTACIÓN DE ORIGEN / SAN FRANCISCO</span></div>
+      <div class="hero-seal" aria-hidden="true"><span>OBSERVACIÓN</span><strong>SFA</strong><span>EST. 1998</span></div>
+    </section>
+
+    <div class="signal-strip" aria-label="Avisos del archivo">
+      <span class="signal-label"><span class="live-dot" aria-hidden="true"></span> BOLETÍN</span>
+      <p>REGISTROS DE SIMULACIÓN · CASOS FICTICIOS · COBERTURA INTERNACIONAL · DATOS PARA DEMOSTRACIÓN</p>
+      <span class="signal-clock">ARCHIVO 06 / ACTIVO</span>
+    </div>
+
+    <section id="alcance" class="reach-section section-wrap" aria-labelledby="reach-title">
+      <div class="section-heading">
+        <p class="eyebrow">UNA RED, MUCHAS SEÑALES <span class="eyebrow-index">/ 01</span></p>
+        <h2 id="reach-title">El mundo deja<br><em>rastros.</em></h2>
+      </div>
+      <div class="reach-copy">
+        <p>El archivo reúne informes de campo, testimonios y lecturas instrumentales en un solo registro. Cada ficha conserva su contexto, su evidencia y la respuesta local.</p>
+        <p class="fiction-notice"><span aria-hidden="true">!</span> LOS EXPEDIENTES VISIBLES SON FICTICIOS Y SE INCLUYEN SOLO COMO DEMOSTRACIÓN.</p>
+      </div>
+      <div class="archive-stats" aria-label="Resumen del archivo">
+        <div><strong id="stat-records">—</strong><span>EXPEDIENTES</span></div>
+        <div><strong id="stat-countries">—</strong><span>PAÍSES</span></div>
+        <div><strong id="stat-evidence">—</strong><span>SEÑALES DOCUMENTADAS</span></div>
+      </div>
+      <div class="country-reach">
+        <div class="country-reach-heading">
+          <p class="eyebrow">PUNTOS DE OBSERVACIÓN</p>
+          <span>SELECCIONA UN PAÍS PARA ABRIR SUS CASOS</span>
+        </div>
+        <div id="country-index" class="country-index" aria-label="Expedientes por país"></div>
+      </div>
+    </section>
+
+    <section id="archivo" class="archive-section" aria-labelledby="feed-title">
+      <div class="section-wrap archive-inner">
+        <div class="archive-heading">
+          <div>
+            <p class="eyebrow">REGISTRO INTERNACIONAL <span class="eyebrow-index">/ 02</span></p>
+            <h2 id="feed-title">Expedientes<br><em>recientes</em></h2>
+          </div>
+          <p class="archive-intro">Consulta los casos por país. Cada expediente contiene descripción, evidencia disponible, nivel de riesgo y respuesta registrada.</p>
+        </div>
+        <div class="feed-tools">
+          <label class="search-field">
+            <span class="visually-hidden">Buscar por país</span>
+            <span aria-hidden="true">⌕</span>
+            <input id="feed-search" type="search" placeholder="Escribe un país" autocomplete="off">
+          </label>
+          <label class="filter-field">
+            <span class="visually-hidden">Seleccionar país</span>
+            <select id="feed-filter"><option value="TODOS">TODOS LOS PAÍSES</option></select>
+          </label>
+          <button id="feed-refresh" class="icon-button" type="button" aria-label="Actualizar expedientes" title="Actualizar">↻</button>
+        </div>
+        <div class="feed-meta">
+          <span id="feed-count">CARGANDO EXPEDIENTES</span>
+          <output id="feed-status" class="inline-status" aria-live="polite">Estableciendo conexión con el archivo...</output>
+        </div>
+        <div id="feed-list" class="feed-list" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="cartografia" class="map-section section-wrap" aria-labelledby="map-title">
+      <div class="map-heading">
+        <div>
+          <p class="eyebrow">DISTRIBUCIÓN GLOBAL <span class="eyebrow-index">/ 03</span></p>
+          <h2 id="map-title">Cartografía de<br><em>incidentes.</em></h2>
+        </div>
+        <p>Los marcadores reflejan los expedientes seleccionados. Usa el archivo por país para acotar las señales.</p>
+      </div>
+      <div class="map-frame">
+        <div id="world-map" role="application" aria-label="Mapa mundial interactivo de anomalías"></div>
+        <div class="map-coordinate" aria-hidden="true">SFA / 06<br>SEÑAL GLOBAL</div>
+      </div>
+      <div class="map-footer">
+        <output id="map-status" aria-live="polite">ESPERANDO COORDENADAS</output>
+        <span id="map-provider">MAPA BASE · CARTO</span>
+      </div>
+    </section>
+
+    <section id="acceso" class="access-section" aria-labelledby="access-title">
+      <div class="section-wrap access-inner">
+        <div>
+          <p class="eyebrow">IDENTIDAD DE ARCHIVO <span class="eyebrow-index">/ 04</span></p>
+          <h2 id="access-title">Cada informe<br>necesita una <em>voz.</em></h2>
+        </div>
+        <p>El acceso de reporteros y administradores requiere una cuenta validada por el servicio de autenticación del archivo.</p>
+        <a class="action-primary" href="login.html">ENTRAR CON CUENTA <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="wordmark" href="#inicio"><span class="wordmark-mark" aria-hidden="true">SFA</span><span class="wordmark-name">SAN FRANCISCO<br>ARCHIVE</span></a>
+    <p>ARCHIVO DE SIMULACIÓN · INFORMACIÓN FICTICIA PARA DEMOSTRACIÓN</p>
+    <a href="#inicio">VOLVER ARRIBA ↑</a>
+  </footer>
+
+  <script type="module">
+    import { iniciarFeed } from "./js/feed.js";
+    import { iniciarMapa } from "./js/map.js";
+
+    const mapa = iniciarMapa();
+    iniciarFeed((incidentes) => mapa.actualizarIncidentes(incidentes));
+  </script>
+</body>
+        <output id="map-status" aria-live="polite">ESPERANDO COORDENADAS</output>
+        <span id="map-provider">MAPA BASE · CARTO</span>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { iniciarFeed } from "./js/feed.js";
+    import { iniciarMapa } from "./js/map.js";
+
+    const mapa = iniciarMapa();
+    iniciarFeed((incidentes) => mapa.actualizarIncidentes(incidentes));
+  </script>
+</body>
+</html>
