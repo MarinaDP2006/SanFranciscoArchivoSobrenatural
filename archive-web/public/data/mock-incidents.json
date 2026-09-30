@@ -1,5 +1,0 @@
-﻿[
-  { "id": 1, "tipo": "DESAPARICION", "ciudad": "Roma", "pais": "IT", "lat": 41.9028, "lon": 12.4964, "fecha": "2026-09-22" },
-  { "id": 2, "tipo": "SECUESTRO",    "ciudad": "Sevilla", "pais": "ES", "lat": 37.3891, "lon": -5.9845, "fecha": "2026-09-24" },
-  { "id": 3, "tipo": "ASESINATO",    "ciudad": "San Francisco", "pais": "US", "lat": 37.7749, "lon": -122.4194, "fecha": "2026-09-25" }
-]
