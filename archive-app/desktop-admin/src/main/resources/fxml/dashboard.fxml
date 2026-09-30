@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+						xmlns:fx="http://javafx.com/fxml/1"
+						fx:controller="com.archive.desktop.controller.DashboardController"
+						styleClass="app-root"
+						minWidth="1180.0"
+						minHeight="700.0">
+	<top>
+		<HBox alignment="CENTER_LEFT" spacing="18.0" styleClass="topbar">
+			<VBox spacing="3.0">
+				<Label text="SAN FRANCISCO ARCHIVE" styleClass="brand-title" />
+				<Label text="SISTEMA DE OBSERVACIÓN GLOBAL" styleClass="muted-label" />
+			</VBox>
+			<Region HBox.hgrow="ALWAYS" />
+			<VBox alignment="CENTER_RIGHT" spacing="4.0">
+				<Label fx:id="sesionLabel" text="SESIÓN" styleClass="session-label" />
+				<Label fx:id="estadoLabel" text="ESPERANDO DATOS" styleClass="status-label" />
+			</VBox>
+			<Button text="↻  ACTUALIZAR" onAction="#recargarDatos" styleClass="secondary-button" />
+		</HBox>
+	</top>
+
+	<center>
+		<HBox spacing="12.0" styleClass="dashboard-columns">
+			<VBox minWidth="310.0" prefWidth="355.0" spacing="12.0" styleClass="terminal-panel">
+				<HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="section-heading">
+					<Label text="01" styleClass="section-index" />
+					<Label text="BD MUNDIAL" styleClass="section-title" />
+				</HBox>
+				<HBox spacing="8.0">
+					<VBox HBox.hgrow="ALWAYS" styleClass="metric-box">
+						<Label text="INCIDENTES" styleClass="metric-caption" />
+						<Label fx:id="incidentesTotalLabel" text="--" styleClass="metric-value" />
+					</VBox>
+					<VBox HBox.hgrow="ALWAYS" styleClass="metric-box">
+						<Label text="POTENCIALES" styleClass="metric-caption" />
+						<Label fx:id="potencialesTotalLabel" text="--" styleClass="metric-value" />
+					</VBox>
+					<VBox HBox.hgrow="ALWAYS" styleClass="metric-box">
+						<Label text="CONTRATOS" styleClass="metric-caption" />
+						<Label fx:id="contratosTotalLabel" text="--" styleClass="metric-value" />
+					</VBox>
+				</HBox>
+				<Label text="ÚLTIMOS INCIDENTES" styleClass="subsection-title" />
+				<TableView fx:id="incidentesTabla" VBox.vgrow="ALWAYS" minHeight="260.0">
+					<columns>
+						<TableColumn fx:id="incidenteIdColumna" text="ID" prefWidth="42.0" />
+						<TableColumn fx:id="incidenteTipoColumna" text="TIPO" prefWidth="95.0" />
+						<TableColumn fx:id="incidenteCiudadColumna" text="CIUDAD" prefWidth="100.0" />
+						<TableColumn fx:id="incidenteEstadoColumna" text="ESTADO" prefWidth="90.0" />
+					</columns>
+				</TableView>
+				<Label text="LECTURA GLOBAL  /  SOLO ADMIN" styleClass="footnote" />
+			</VBox>
+
+			<VBox HBox.hgrow="ALWAYS" minWidth="420.0" spacing="12.0" styleClass="terminal-panel map-panel">
+				<HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="section-heading">
+					<Label text="02" styleClass="section-index" />
+					<Label text="MAPA" styleClass="section-title" />
+					<Region HBox.hgrow="ALWAYS" />
+					<Label text="LAT / LON" styleClass="coordinate-label" />
+				</HBox>
+				<Label text="PROYECCIÓN MUNDIAL DE INCIDENTES" styleClass="subsection-title" />
+				<Canvas fx:id="mapaCanvas" width="560.0" height="470.0" VBox.vgrow="ALWAYS" />
+				<HBox alignment="CENTER_LEFT" spacing="8.0">
+					<Region styleClass="legend-dot" />
+					<Label fx:id="mapaResumenLabel" text="0 INCIDENTES CON COORDENADAS" styleClass="footnote" />
+				</HBox>
+			</VBox>
+
+			<VBox minWidth="370.0" prefWidth="425.0" spacing="12.0" styleClass="terminal-panel">
+				<HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="section-heading">
+					<Label text="03" styleClass="section-index" />
+					<Label text="GESTIÓN CONTRATOS" styleClass="section-title" />
+				</HBox>
+				<TableView fx:id="contratosTabla" VBox.vgrow="ALWAYS" minHeight="400.0">
+					<columns>
+						<TableColumn fx:id="contratoIdColumna" text="ID" prefWidth="48.0" />
+						<TableColumn fx:id="contratoCiudadColumna" text="CIUDAD" prefWidth="112.0" />
+						<TableColumn fx:id="contratoEstadoColumna" text="ESTADO" prefWidth="95.0" />
+						<TableColumn fx:id="contratoRecompensaColumna" text="RECOMPENSA" prefWidth="112.0" />
+					</columns>
+				</TableView>
+				<Button fx:id="completarButton" text="COMPLETAR Y ABONAR RECOMPENSA"
+								onAction="#completarContratoSeleccionado"
+								styleClass="primary-button" maxWidth="Infinity" />
+				<Label text="La recompensa se registra en la API en una sola transacción." styleClass="footnote" />
+			</VBox>
+		</HBox>
+	</center>
+</BorderPane>

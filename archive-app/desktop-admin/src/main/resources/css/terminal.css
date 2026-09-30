@@ -1,0 +1,231 @@
+.root {
+	-fx-font-family: "Consolas", "Monospaced";
+	-fx-font-size: 12px;
+	-fx-text-fill: #c4e8ce;
+	-fx-background-color: #050907;
+}
+
+.app-root {
+	-fx-background-color: #050907;
+}
+
+.topbar {
+	-fx-padding: 18px 22px;
+	-fx-background-color: #09120d;
+	-fx-border-color: #244631;
+	-fx-border-width: 0 0 1px 0;
+}
+
+.dashboard-columns {
+	-fx-padding: 14px;
+	-fx-background-color: #050907;
+}
+
+.terminal-panel {
+	-fx-padding: 15px;
+	-fx-background-color: #0a120d;
+	-fx-border-color: #244631;
+	-fx-border-width: 1px;
+}
+
+.map-panel {
+	-fx-background-color: #08100b;
+}
+
+.brand-title {
+	-fx-font-size: 18px;
+	-fx-font-weight: bold;
+	-fx-text-fill: #72ffa0;
+}
+
+.muted-label,
+.footnote,
+.coordinate-label {
+	-fx-font-size: 10px;
+	-fx-text-fill: #799b83;
+}
+
+.session-label {
+	-fx-font-size: 11px;
+	-fx-text-fill: #d6f4dd;
+}
+
+.status-label {
+	-fx-font-size: 10px;
+	-fx-text-fill: #5dff91;
+}
+
+.section-heading {
+	-fx-padding: 0 0 9px 0;
+	-fx-border-color: transparent transparent #244631 transparent;
+	-fx-border-width: 0 0 1px 0;
+}
+
+.section-index {
+	-fx-text-fill: #4b9b63;
+	-fx-font-size: 11px;
+	-fx-font-weight: bold;
+}
+
+.section-title {
+	-fx-text-fill: #8dffad;
+	-fx-font-size: 13px;
+	-fx-font-weight: bold;
+}
+
+.subsection-title,
+.metric-caption {
+	-fx-text-fill: #85a48d;
+	-fx-font-size: 10px;
+	-fx-font-weight: bold;
+}
+
+.metric-box {
+	-fx-spacing: 5px;
+	-fx-padding: 9px;
+	-fx-background-color: #0d1a11;
+	-fx-border-color: #1e3b27;
+	-fx-border-width: 1px;
+}
+
+.metric-value {
+	-fx-text-fill: #84ffa7;
+	-fx-font-size: 20px;
+	-fx-font-weight: bold;
+}
+
+.metric-inline {
+	-fx-text-fill: #84ffa7;
+	-fx-font-size: 16px;
+	-fx-font-weight: bold;
+}
+
+.list-summary {
+	-fx-padding: 6px 0;
+	-fx-border-color: transparent transparent #1e3b27 transparent;
+	-fx-border-width: 0 0 1px 0;
+}
+
+.legend-dot {
+	-fx-min-width: 9px;
+	-fx-min-height: 9px;
+	-fx-max-width: 9px;
+	-fx-max-height: 9px;
+	-fx-background-color: #5dff91;
+	-fx-background-radius: 5px;
+}
+
+.button {
+	-fx-padding: 9px 13px;
+	-fx-background-color: #102318;
+	-fx-border-color: #3b8c52;
+	-fx-border-width: 1px;
+	-fx-text-fill: #a8f7bb;
+	-fx-font-family: "Consolas", "Monospaced";
+	-fx-font-size: 11px;
+	-fx-font-weight: bold;
+	-fx-cursor: hand;
+}
+
+.button:hover {
+	-fx-background-color: #173823;
+	-fx-border-color: #71f994;
+	-fx-text-fill: #d5ffe0;
+}
+
+.button:disabled {
+	-fx-opacity: 0.45;
+	-fx-cursor: default;
+}
+
+.primary-button {
+	-fx-background-color: #174529;
+	-fx-border-color: #5dff91;
+	-fx-text-fill: #d7ffe1;
+}
+
+.text-field,
+.password-field {
+	-fx-padding: 10px;
+	-fx-background-color: #070d09;
+	-fx-border-color: #2b5637;
+	-fx-border-width: 1px;
+	-fx-text-fill: #d4f5dc;
+	-fx-prompt-text-fill: #66816d;
+	-fx-highlight-fill: #245a35;
+	-fx-highlight-text-fill: #f1fff3;
+}
+
+.text-field:focused,
+.password-field:focused {
+	-fx-border-color: #68e98a;
+}
+
+.table-view {
+	-fx-background-color: #07100b;
+	-fx-control-inner-background: #07100b;
+	-fx-table-cell-border-color: #14271a;
+	-fx-border-color: #1e3b27;
+	-fx-border-width: 1px;
+	-fx-padding: 0;
+}
+
+.table-view .column-header-background {
+	-fx-background-color: #102017;
+}
+
+.table-view .column-header,
+.table-view .filler {
+	-fx-size: 30px;
+	-fx-background-color: #102017;
+	-fx-border-color: transparent transparent #244631 transparent;
+}
+
+.table-view .column-header .label {
+	-fx-alignment: CENTER_LEFT;
+	-fx-text-fill: #85c595;
+	-fx-font-size: 10px;
+	-fx-font-weight: bold;
+}
+
+.table-row-cell {
+	-fx-background-color: #07100b;
+	-fx-text-background-color: #c2dfc9;
+	-fx-cell-size: 31px;
+}
+
+.table-row-cell:odd {
+	-fx-background-color: #0a140d;
+}
+
+.table-row-cell:selected {
+	-fx-background-color: #163722;
+	-fx-text-background-color: #e2ffe9;
+}
+
+.table-view .placeholder .label {
+	-fx-text-fill: #6f8e76;
+}
+
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+	-fx-background-color: #07100b;
+}
+
+.scroll-bar .thumb {
+	-fx-background-color: #31553a;
+	-fx-background-radius: 0;
+}
+
+.login-screen {
+	-fx-alignment: CENTER;
+	-fx-padding: 28px;
+	-fx-background-color: #050907;
+}
+
+.login-panel {
+	-fx-padding: 24px;
+	-fx-background-color: #0a120d;
+	-fx-border-color: #315b3d;
+	-fx-border-width: 1px;
+}
