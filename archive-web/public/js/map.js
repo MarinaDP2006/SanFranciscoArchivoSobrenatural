@@ -1,23 +1,87 @@
-﻿// Mapa 2D oscuro - San Francisco Archive
-const map = L.map("map", { zoomControl: true, attributionControl: false })
-             .setView([40.4168, -3.7038], 3);
+﻿import { CONFIG } from "./config.js";
 
-L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-  subdomains: "abcd", maxZoom: 19,
-}).addTo(map);
+const COLORES_TIPO = {
+  ASESINATO: "#ff695e",
+  SECUESTRO: "#f0bd61",
+  DESAPARICION: "#67d9c1",
+};
 
-async function cargarIncidentes() {
-  const r = await fetch("./data/mock-incidents.json");
-  const lista = await r.json();
-  lista.forEach(i => {
-    const color = i.tipo === "ASESINATO" ? "#ff3b3b"
-                : i.tipo === "SECUESTRO" ? "#ffb020" : "#00d4ff";
-    L.circleMarker([i.lat, i.lon], {
-      radius: 7, color, fillColor: color, fillOpacity: 0.7, weight: 1,
-    }).addTo(map).bindPopup(`<b>${i.tipo}</b><br>${i.ciudad}, ${i.pais}`);
-  });
+/**
+ * Inicializa el mapa Leaflet oscuro y devuelve la actualización de marcadores.
+ *
+ * @returns {{actualizarIncidentes: (incidentes: Array<object>) => void}} controlador de mapa
+ */
+export function iniciarMapa() {
+  const mapa = L.map("world-map", {
+    zoomControl: false,
+    scrollWheelZoom: true,
+    minZoom: 2,
+    maxZoom: 18,
+    worldCopyJump: true,
+  }).setView(CONFIG.MAP_CENTER, CONFIG.MAP_ZOOM);
+
+  L.control.zoom({ position: "bottomright" }).addTo(mapa);
+  L.tileLayer(CONFIG.MAP_STYLE, {
+    subdomains: "abcd",
+    maxZoom: 20,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  }).addTo(mapa);
+
+  const capaIncidentes = L.layerGroup().addTo(mapa);
+  requestAnimationFrame(() => mapa.invalidateSize());
+
+  /**
+   * Sustituye marcadores existentes por los incidentes más recientes.
+   *
+   * @param {Array<object>} incidentes incidentes recibidos de la API
+   */
+  function actualizarIncidentes(incidentes) {
+    capaIncidentes.clearLayers();
+    let marcadores = 0;
+
+    incidentes.forEach((incidente) => {
+      const latitud = Number(incidente.lat);
+      const longitud = Number(incidente.lon);
+      if (!Number.isFinite(latitud) || !Number.isFinite(longitud)
+          || latitud < -90 || latitud > 90 || longitud < -180 || longitud > 180) {
+        return;
+      }
+
+      const color = COLORES_TIPO[incidente.tipo] ?? "#8eb99a";
+      const marcador = L.circleMarker([latitud, longitud], {
+        radius: 7,
+        color,
+        fillColor: color,
+        fillOpacity: 0.85,
+        weight: 1.5,
+      });
+      marcador.bindPopup(crearContenidoPopup(incidente));
+      marcador.addTo(capaIncidentes);
+      marcadores++;
+    });
+
+    const estado = document.getElementById("map-status");
+    estado.textContent = marcadores === 1
+      ? "1 INCIDENTE GEOLOCALIZADO"
+      : `${marcadores} INCIDENTES GEOLOCALIZADOS`;
+  }
+
+  return { actualizarIncidentes };
 }
-cargarIncidentes();
 
-// Auto-refresh cada 30s (futuro: llamará a la API del VPS)
-setInterval(cargarIncidentes, 30000);
+/**
+ * Construye el popup como nodos de texto para no interpretar datos de la API como HTML.
+ *
+ * @param {object} incidente incidente que se muestra
+ * @returns {HTMLElement} contenido seguro del popup
+ */
+function crearContenidoPopup(incidente) {
+  const contenedor = document.createElement("div");
+  contenedor.className = "map-popup";
+  const tipo = document.createElement("strong");
+  tipo.textContent = String(incidente.tipo ?? "INCIDENTE").replaceAll("_", " ");
+  const lugar = document.createElement("span");
+  lugar.textContent = [incidente.ciudad, incidente.pais].filter(Boolean).join(", ") || "Ubicación no indicada";
+  contenedor.append(tipo, lugar);
+  return contenedor;
+}

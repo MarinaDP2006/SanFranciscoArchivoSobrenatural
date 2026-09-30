@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#070b08">
+	<title>Acceso reporter | San Francisco Archive</title>
+	<link rel="stylesheet" href="css/terminal.css">
+</head>
+<body class="auth-page">
+	<main class="auth-panel">
+		<a class="wordmark" href="index.html">
+			<span class="wordmark-mark" aria-hidden="true">SFA</span>
+			<span class="wordmark-name">SAN FRANCISCO<br>ARCHIVE</span>
+		</a>
+		<p class="eyebrow">PORTAL DE REPORTERS <span class="eyebrow-index">/ AUTENTICACIÓN</span></p>
+		<h1 class="auth-title">Acceso al archivo</h1>
+		<p class="auth-copy">Inicia sesión para consultar tus contratos y registrar nuevos incidentes.</p>
+
+		<form id="login-form" class="auth-form">
+			<label class="field-label" for="username">NOMBRE DE USUARIO
+				<input class="form-control" id="username" name="username" type="text"
+							 autocomplete="username" required maxlength="50">
+			</label>
+			<label class="field-label" for="password">CONTRASEÑA
+				<input class="form-control" id="password" name="password" type="password"
+							 autocomplete="current-password" required>
+			</label>
+			<button id="login-submit" class="primary-button" type="submit">INICIAR SESIÓN</button>
+			<output id="login-status" class="auth-status" aria-live="polite"></output>
+		</form>
+		<p class="auth-footer"><a href="index.html">← VOLVER AL ARCHIVO PÚBLICO</a></p>
+	</main>
+	<script type="module" src="js/auth.js"></script>
+</body>
+</html>
