@@ -7,9 +7,9 @@ Guía para entender el proyecto desde cero, pensada para 2.º de **DAM**: te acu
 ## Índice
 
 1. [La idea en un minuto](#1-la-idea-en-un-minuto)
-2. [Preparar el ordenador](#2-preparar-el-ordenador)
+2. [Preparar el ordenador: qué instalar y cómo](#2-preparar-el-ordenador)
 3. [Arrancar todo paso a paso](#3-arrancar-todo-paso-a-paso)
-4. [Mapa de carpetas](#4-mapa-de-carpetas)
+4. [Mapa de carpetas y clase por clase](#4-mapa-de-carpetas)
 5. [Repaso de Java que usa el proyecto](#5-repaso-de-java-que-usa-el-proyecto)
 6. [La base de datos](#6-la-base-de-datos)
 7. [Hablar con MySQL desde Java (JDBC)](#7-hablar-con-mysql-desde-java-jdbc)
@@ -44,16 +44,114 @@ Ejemplo real: en la app marcas un incidente como *Publicado en la web* → se gu
 
 ## 2. Preparar el ordenador
 
-| Herramienta | Para qué | Dónde |
-| --- | --- | --- |
-| **JDK 21** | Compilar y ejecutar Java | [adoptium.net](https://adoptium.net) (Temurin 21) |
-| **IntelliJ IDEA Community** o **NetBeans** | IDE | Ya lo usáis en clase |
-| **Maven** | Descarga librerías y compila | Viene integrado en IntelliJ/NetBeans |
-| **MySQL 8** (o XAMPP) | Base de datos | XAMPP trae MariaDB, también vale |
-| **MySQL Workbench** o phpMyAdmin | Ver las tablas | Opcional, pero muy útil |
-| **Scene Builder** | Diseñar pantallas FXML | [gluonhq.com/products/scene-builder](https://gluonhq.com/products/scene-builder/) |
+### 2.1 Lista de lo que necesitas
 
-**Abrir el proyecto en IntelliJ:** *File → Open* → elige la carpeta **`archive-app`** (la que tiene el `pom.xml` padre). IntelliJ detecta los 3 módulos Maven solo. Si te pregunta, acepta "Trust project" y "Load Maven project".
+| # | Herramienta | ¿Obligatoria? | Para qué |
+| --- | --- | --- | --- |
+| 1 | **JDK 21** | ✅ Sí | Compilar y ejecutar Java |
+| 2 | **IntelliJ IDEA Community** (o NetBeans) | ✅ Sí | Escribir y ejecutar el código (trae Maven dentro) |
+| 3 | **XAMPP** (o MySQL 8) | ✅ Sí | La base de datos |
+| 4 | **Git** | ✅ Sí | Descargar el proyecto y subir cambios |
+| 5 | **Scene Builder** | Recomendada | Diseñar pantallas FXML (clase) |
+| 6 | **MySQL Workbench** | Opcional | Ver y consultar las tablas con comodidad (phpMyAdmin de XAMPP también vale) |
+| 7 | **Maven** suelto | Opcional | Solo si quieres usar `mvn` desde la terminal |
+| 8 | Navegador (Chrome, Firefox, Edge) | ✅ Sí | Ver la web |
+
+Las instrucciones son para **Windows** (lo normal en clase). En Mac/Linux los pasos son equivalentes.
+
+### 2.2 JDK 21 (Java)
+
+1. Entra en **https://adoptium.net** → elige *Temurin 21 (LTS)* → *Windows x64* → descarga el **`.msi`**.
+2. Ejecútalo. En la pantalla de opciones, marca:
+   - ✅ **Set JAVA_HOME variable**
+   - ✅ **Add to PATH**
+3. Comprueba: abre una terminal nueva (tecla Windows → escribe `cmd`) y escribe:
+   ```
+   java -version
+   ```
+   Debe decir `openjdk version "21...`. Si sale otra versión (por ejemplo 17), es que tienes varias instaladas: desinstala la vieja o revisa `JAVA_HOME` en *Variables de entorno*.
+
+> ¿Por qué 21? El proyecto usa `record`, `switch` moderno y text blocks, que necesitan Java 17+, y JavaFX 21.
+
+### 2.3 IntelliJ IDEA Community
+
+1. **https://www.jetbrains.com/idea/download** → **Community Edition** (gratis) → instalar con las opciones por defecto.
+   (Con el correo del instituto puedes pedir la *Ultimate* gratis como estudiante, pero no hace falta.)
+2. Abre el proyecto: *File → Open* → elige la carpeta **`archive-app`** (la que tiene el `pom.xml` padre) → *Trust Project*.
+3. Abajo a la derecha verás que descarga dependencias ("Resolving Maven dependencies…"). La primera vez tarda unos minutos: está bajando JavaFX, Javalin, el driver de MySQL…
+4. Comprueba el JDK: *File → Project Structure → Project → SDK* = **21**. Si no aparece, *Add SDK → JDK* y elige la carpeta de Temurin (`C:\Program Files\Eclipse Adoptium\jdk-21...`).
+
+**Maven** ya viene dentro de IntelliJ: lo tienes en el panel lateral derecho (icono **m**). No hace falta instalarlo aparte.
+
+> ¿Usas NetBeans? *File → Open Project* → `archive-app`. NetBeans también entiende Maven sin instalar nada.
+
+### 2.4 XAMPP (MySQL/MariaDB)
+
+1. **https://www.apachefriends.org** → descarga XAMPP para Windows → instala (con *Apache*, *MySQL* y *phpMyAdmin* marcados basta).
+2. Abre el **XAMPP Control Panel** → botón **Start** en **MySQL** (y en **Apache** si quieres usar phpMyAdmin). Se ponen en verde.
+3. phpMyAdmin: **http://localhost/phpmyadmin**
+4. Por defecto el usuario es `root` **sin contraseña**.
+
+> XAMPP trae **MariaDB**, que es "primo hermano" de MySQL: el proyecto funciona igual.
+> **Si el puerto 3306 está ocupado** (tenías otro MySQL instalado), para el otro servicio o cambia el puerto en XAMPP → *Config → my.ini* (`port=3307`) y en `archive.properties` (`localhost:3307`).
+
+**Alternativa sin XAMPP:** *MySQL Installer* desde https://dev.mysql.com/downloads/installer/ → instala *MySQL Server 8* + *MySQL Workbench*. Te pedirá una contraseña para `root`: apúntala.
+
+### 2.5 Git
+
+1. **https://git-scm.com/download/win** → instalar con opciones por defecto.
+2. Configúralo una vez:
+   ```
+   git config --global user.name "Nina"
+   git config --global user.email "tu-correo@ejemplo.com"
+   ```
+3. Descarga el proyecto:
+   ```
+   cd C:\Users\Nina\Documents
+   git clone https://github.com/MarinaDP2006/SanFranciscoArchivoSobrenatural.git
+   ```
+   (O desde IntelliJ: *File → New → Project from Version Control* → pega la URL.)
+
+### 2.6 Scene Builder
+
+1. **https://gluonhq.com/products/scene-builder/** → descarga la versión para **Java 21** (Windows Installer) → instalar.
+2. Conéctalo con IntelliJ: *File → Settings → Languages & Frameworks → JavaFX* → *Path to SceneBuilder* → `C:\Users\<tu usuario>\AppData\Local\SceneBuilder\SceneBuilder.exe`.
+3. Ahora, con clic derecho sobre cualquier `.fxml` → **Open in SceneBuilder**.
+
+### 2.7 MySQL Workbench (opcional)
+
+https://dev.mysql.com/downloads/workbench/ → instalar → *+* nueva conexión → host `127.0.0.1`, puerto `3306`, usuario `root`. Funciona también con el MySQL de XAMPP.
+
+### 2.8 Maven en la terminal (opcional)
+
+Solo si quieres escribir `mvn ...` en `cmd`:
+1. https://maven.apache.org/download.cgi → *Binary zip archive* → descomprímelo en `C:\maven`.
+2. *Variables de entorno* → `Path` → *Nuevo* → `C:\maven\bin`.
+3. Terminal nueva → `mvn -version`.
+
+Si no lo instalas, haz todo desde el panel **Maven** de IntelliJ (doble clic en `clean`, `package`, `javafx:run`…).
+
+### 2.9 Si usas `root` en lugar de los usuarios del proyecto
+
+El script `01_schema.sql` crea los usuarios MySQL `sfa_admin` y `sfa_web`. Si prefieres entrar con `root` (lo típico en XAMPP), edita `archive-app/core/src/main/resources/archive.properties`:
+```properties
+db.user=root
+db.password=
+api.db.user=root
+api.db.password=
+```
+(Deja la contraseña vacía si tu `root` no tiene; si la tiene, escríbela.)
+
+### 2.10 Comprobación final
+
+| Comprobación | Resultado esperado |
+| --- | --- |
+| `java -version` | `21.x` |
+| XAMPP → MySQL | En verde |
+| IntelliJ → panel Maven → `archive-app` | Se ven `core`, `api-web`, `desktop-admin` sin errores rojos |
+| http://localhost/phpmyadmin | Abre (si arrancaste Apache) |
+
+Si todo está bien, sigue con la sección 3. 🎉
 
 ---
 
@@ -135,6 +233,178 @@ database/                           ← los dos scripts SQL
 - **qué se permite hacer** → `service/`
 - **cómo se ve en la app** → `views/` + `tema.css`
 - **cómo se ve en la web** → `archive-web/public/`
+
+### 4.1 Clase por clase
+
+Hay **77 clases**, pero no te asustes: casi todas siguen el mismo patrón. Por paquetes:
+
+#### `core` → `com.sfarchive.core.db` (conexión)
+
+| Clase | Qué hace |
+| --- | --- |
+| `Config` | Lee `archive.properties` (y variables de entorno) para saber a qué MySQL conectarse |
+| `Database` | Crea el *pool* de conexiones (HikariCP) y da conexiones con `Database.connection()` |
+| `Jdbc` | Ayudante para no repetir JDBC: `query`, `one`, `insert`, `update`, `inTransaction` |
+| `DataException` | Excepción con un mensaje "para humanos" (la muestran las pantallas en un diálogo) |
+
+#### `core` → `com.sfarchive.core.model` (los datos)
+
+**Records** (una ficha de cada cosa, una por tabla):
+
+| Record | Tabla | Representa |
+| --- | --- | --- |
+| `Usuario` | `usuarios` | Cuenta de acceso (admin o potencial) |
+| `Potencial` | `potenciales` | Agente con habilidad, nivel, estado, grupo y saldo |
+| `GrupoTactico` | `grupos_tacticos` | Grupo por país/zona (incluye cuántos miembros tiene) |
+| `Vinculo` | `vinculos_familiares` | Familiar de un potencial |
+| `Incidente` | `incidentes` | Suceso: parte pública + anomalía clasificada |
+| `SolicitudAyuda` | `solicitudes_ayuda` | Aviso anónimo de un ciudadano |
+| `Contrato` | `contratos` | Encargo para resolver un incidente (con datos del incidente, grupo y potencial ya unidos) |
+| `Transaccion` | `transacciones_monedero` | Movimiento del monedero |
+| `Informe` | `informes_clasificados` | Informe final del Archivo Restringido |
+| `Noticia` | `noticias` | Noticia de la web |
+| `ZonaSegura` | `zonas_seguras` | Punto verde del mapa |
+| `Actividad` | `registro_actividad` | Línea del registro de auditoría |
+
+**Enums** (valores fijos, iguales que los `ENUM` de MySQL): `Rol`, `TipoIncidente`, `EstadoIncidente`, `OrigenIncidente`, `EstadoContrato`, `Prioridad`, `EstadoPotencial`, `TipoTransaccion`, `Clasificacion`, `CategoriaNoticia`, `TipoZona`, `EstadoSolicitud`.
+
+#### `core` → `com.sfarchive.core.dao` (el SQL)
+
+Una clase por tabla. Todas tienen un método `map(ResultSet)` que convierte una fila en un record, y métodos tipo `listar()`, `porId()`, `guardar()`, `borrar()`.
+
+| DAO | Métodos destacados |
+| --- | --- |
+| `UsuarioDao` | `porUsername`, `hashDe` (para el login), `cambiarHash`, `registrarAcceso` |
+| `PotencialDao` | `listar`, `porGrupo` (con `null` = sin grupo), `cambiarGrupo`, `cambiarEstado` |
+| `GrupoDao` | `listar` (con número de miembros), `guardar`; constante `MAX_MIEMBROS = 6` |
+| `VinculoDao` | `porPotencial`, `guardar`, `borrar` |
+| `IncidenteDao` | `listar`, `crear` (genera el código `SFA-2026-021`), `sinContratoActivo`, `setPublicado` |
+| `SolicitudDao` | `crear` (genera el código `SF-XXXXXX`), `porCodigo`, `actualizarEstado` |
+| `ContratoDao` | `listar`, `porEstado`, `porPotencial`, `cerrados`, `crear` (código `CTR-2026-017`) |
+| `MonederoDao` | `historial`, **`registrar`** (suma/resta y guarda el movimiento, bloqueando la fila) |
+| `InformeDao` | `porContrato`, `guardar` (inserta o actualiza) |
+| `NoticiaDao` | `listar`, `guardar` (crea el *slug* de la URL), `slugify` |
+| `ZonaSeguraDao` | `listar`, `guardar`, `borrar` |
+| `ActividadDao` | `registrar` (auditoría), `recientes` |
+| `EstadisticasDao` | Contadores para el Dashboard |
+
+#### `core` → `com.sfarchive.core.service` (las reglas)
+
+| Servicio | Reglas que aplica |
+| --- | --- |
+| `AuthService` | Login (usuario activo + contraseña correcta), cambiar y restablecer contraseña |
+| `ContratoService` | **Ciclo del contrato**: crear, `asignar` (comprueba grupo y disponibilidad, calcula transporte), `iniciar`, `reportarFinalizacion`, `completar` (paga), `marcarFallido`, `cancelar` (reembolsa) |
+| `Geo` | Distancia entre coordenadas (Haversine) y coste de transporte |
+| `GrupoService` | Mover potenciales entre grupos (máximo 6) |
+| `MonederoService` | Ajustes manuales (bonus suma, penalización resta) |
+| `PotencialService` | Reclutar (crea la cuenta + la ficha + fondo inicial) y editar |
+| `SolicitudService` | Convertir un aviso en incidente + contrato, ponerlo en revisión o descartarlo |
+
+#### `core` → `com.sfarchive.core.security`
+
+| Clase | Qué hace |
+| --- | --- |
+| `PasswordHasher` | `hash(password)`, `verify(password, hash)` y `validarFortaleza` (mín. 8, letras y números) |
+
+#### `desktop-admin` → `com.sfarchive.desktop` (la app)
+
+| Clase | Qué hace |
+| --- | --- |
+| `Launcher` | `main` "puente" (necesario para el `.jar`/`.exe`); llama a `ArchiveApp.main` |
+| `ArchiveApp` | Extiende `Application`: crea la ventana, carga `tema.css` y cambia entre login y principal |
+| `Sesion` | Guarda el usuario que ha entrado (`Sesion.esAdmin()`, `Sesion.potencialId()`…) |
+| `ui.Ui` | Ayudantes: columnas de tabla, botones, tarjetas KPI, diálogos, `Ui.ejecutar` (captura errores) |
+| `ui.Formulario` | Rejilla etiqueta + campo (`GridPane`) y lectura segura de números |
+| `ui.MapaFx` | Mapa Leaflet dentro de un `WebView` |
+
+**Pantallas** (`views`), todas implementan `Vista`:
+
+| Pantalla | Quién la ve | Para qué |
+| --- | --- | --- |
+| `LoginView` | Todos | Iniciar sesión |
+| `MainView` | Todos | Menú lateral (distinto según el rol) + zona central |
+| `DashboardView` | Admin | Resumen, tabla de incidentes y mapa |
+| `IncidentesView` | Admin | Crear/editar/publicar incidentes |
+| `SolicitudesView` | Admin | Avisos que llegan desde la web |
+| `ContratosView` | Admin | Asignar (grupo + potencial), completar, cancelar |
+| `PotencialesView` + `VinculoDialog` | Admin | Fichas, reclutamiento y familiares |
+| `GruposView` | Admin | Grupos y arrastrar miembros |
+| `MonederosView` | Admin | Saldos e historial |
+| `ArchivoRestringidoView` | Admin | Informes clasificados |
+| `NoticiasView`, `ZonasView` | Admin | Contenido de la web |
+| `UsuariosView` | Admin | Cuentas y auditoría |
+| `MisMisionesView`, `MiMonederoView`, `MisVinculosView`, `ReportarView` | Potencial | Su trabajo diario |
+| `PerfilView` | Todos | Cambiar contraseña |
+
+#### `api-web` → `com.sfarchive.api`
+
+| Clase | Qué hace |
+| --- | --- |
+| `ApiServer` | Arranca Javalin, define las rutas `/api/...`, CORS, errores y sirve la web |
+| `WebDao` | Consultas de solo lectura sobre las **vistas públicas** (nunca ve la anomalía) |
+
+### 4.2 Diagrama de clases (lo esencial)
+
+GitHub dibuja este diagrama automáticamente:
+
+```mermaid
+classDiagram
+    direction LR
+    class ContratosView {
+        -TableView~Contrato~ tabla
+        -ComboBox~GrupoTactico~ grupo
+        -ComboBox~Potencial~ potencial
+        +vista() Node
+        +refrescar()
+        -asignar()
+    }
+    class Vista {
+        <<interface>>
+        +vista() Node
+        +refrescar()
+    }
+    class ContratoService {
+        +asignar(contratoId, grupoId, potencialId, adminId) Transporte
+        +completar(contratoId, adminId)
+        +cancelar(contratoId, adminId)
+    }
+    class Geo {
+        +distanciaKm(lat1, lng1, lat2, lng2)$ double
+        +costeTransporte(km)$ BigDecimal
+    }
+    class ContratoDao {
+        +listar() List~Contrato~
+        +porId(id) Optional~Contrato~
+    }
+    class PotencialDao
+    class MonederoDao {
+        +registrar(conexion, potencialId, ...) BigDecimal
+    }
+    class Jdbc {
+        +query(sql, mapper, params)$ List
+        +inTransaction(trabajo)$ T
+    }
+    class Contrato {
+        <<record>>
+    }
+    class Potencial {
+        <<record>>
+    }
+    Vista <|.. ContratosView
+    ContratosView --> ContratoService : usa
+    ContratosView --> ContratoDao : lee la tabla
+    ContratoService --> Geo
+    ContratoService --> ContratoDao
+    ContratoService --> PotencialDao
+    ContratoService --> MonederoDao
+    ContratoDao --> Jdbc
+    PotencialDao --> Jdbc
+    MonederoDao --> Jdbc
+    ContratoDao ..> Contrato : crea
+    PotencialDao ..> Potencial : crea
+```
+
+Lee el diagrama de izquierda a derecha: **pantalla → servicio → DAO → Jdbc → MySQL**. Todas las demás pantallas siguen exactamente este dibujo cambiando los nombres.
 
 ---
 
