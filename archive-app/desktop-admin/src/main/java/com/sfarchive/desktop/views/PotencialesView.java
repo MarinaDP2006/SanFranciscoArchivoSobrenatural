@@ -35,19 +35,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/** Fichas de los potenciales: datos, habilidad, estado, cuenta de acceso y vínculos familiares. */
+/**
+ * Pantalla Potenciales (solo administradores): fichas de los agentes, reclutamiento
+ * (crea también su cuenta para entrar en la app) y sus vínculos familiares (segunda pestaña).
+ * <p>
+ * Como todas las pantallas, implementa {@link Vista}: {@code vista()} construye los controles
+ * una sola vez y {@code refrescar()} vuelve a leer los datos de MySQL cada vez que se abre.
+ */
 public class PotencialesView implements Vista {
 
+    // --- Acceso a datos y reglas ---
     private final PotencialDao dao = new PotencialDao();
     private final GrupoDao grupos = new GrupoDao();
     private final VinculoDao vinculos = new VinculoDao();
     private final PotencialService servicio = new PotencialService();
 
+    // --- Componentes de la pantalla ---
     private VBox raiz;
     private final TableView<Potencial> tabla = Ui.tabla("Sin potenciales");
     private final TableView<Vinculo> tablaVinculos = Ui.tabla("Sin vínculos registrados");
     private Potencial actual;
 
+    // --- Campos de la ficha ---
     private final Label cabecera = new Label();
     private final TextField alias = new TextField();
     private final TextField nombre = new TextField();
@@ -64,15 +73,22 @@ public class PotencialesView implements Vista {
     private final TextField lng = new TextField();
     private final DatePicker reclutamiento = new DatePicker();
     // Cuenta (solo al reclutar)
+    // --- Cuenta de acceso (solo al reclutar) ---
     private final TextField username = new TextField();
     private final TextField email = new TextField();
     private final PasswordField password = new PasswordField();
     private final TextField fondo = new TextField("500");
     private VBox cuenta;
 
+    /**
+     * Construye la pantalla (solo la primera vez; después devuelve la misma).
+     * Aquí se crean las columnas de la tabla, el formulario, los botones y la distribución.
+     */
     @Override
     public Node vista() {
+        // Si ya la habíamos construido, la reutilizamos (así no se pierde lo que estaba seleccionado)
         if (raiz != null) return raiz;
+        // Columnas de la tabla: título, ancho en píxeles y qué dato del objeto mostrar en cada una
         tabla.getColumns().addAll(List.of(
                 Ui.col("Alias", 90, Potencial::alias),
                 Ui.col("Nombre real", 130, Potencial::nombreReal),
@@ -82,6 +98,7 @@ public class PotencialesView implements Vista {
                 Ui.col("Grupo", 130, p -> p.grupoNombre() == null ? "— sin grupo —" : p.grupoNombre()),
                 Ui.col("Ciudad", 100, Potencial::ciudad),
                 Ui.colDinero("Saldo", 95, Potencial::saldo)));
+        // Cuando el usuario selecciona una fila, rellenamos el formulario con sus datos
         tabla.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> { if (n != null) mostrar(n); });
 
         tablaVinculos.getColumns().addAll(List.of(
@@ -119,12 +136,16 @@ public class PotencialesView implements Vista {
                         Ui.peligro("Eliminar", this::borrarVinculo)));
         panelVinculos.getStyleClass().add("panel");
 
+        // Dos pestañas: la ficha y los vínculos familiares
         TabPane tabs = new TabPane(new Tab("Ficha", scrollFicha), new Tab("Vínculos familiares", panelVinculos));
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
+        // Dos paneles con una separación que se puede arrastrar (izquierda | derecha)
         SplitPane split = new SplitPane(tabla, tabs);
+        // Posición inicial de la separación (0.5 = mitad)
         split.setDividerPositions(0.58);
         VBox.setVgrow(split, Priority.ALWAYS);
+        // Montamos la pantalla: título + descripción + contenido
         raiz = Ui.pantalla("Potenciales",
                 "La red de agentes del Archivo. Cada potencial tiene su propia cuenta en esta aplicación para ver sus misiones, su monedero y sus vínculos.",
                 split);
@@ -132,6 +153,7 @@ public class PotencialesView implements Vista {
         return raiz;
     }
 
+    /** Recarga grupos (para el ComboBox) y potenciales. */
     @Override
     public void refrescar() {
         List<GrupoTactico> gs = new ArrayList<>();
@@ -142,6 +164,10 @@ public class PotencialesView implements Vista {
         if (actual != null) dao.porId(actual.id()).ifPresent(this::mostrar);
     }
 
+    /**
+     * Copia la ficha seleccionada al formulario y carga sus vínculos.
+     * La sección "Cuenta de acceso" se oculta: solo se usa al reclutar.
+     */
     private void mostrar(Potencial p) {
         actual = p;
         cabecera.setText(p.alias().toUpperCase() + " · @" + Ui.nvl(p.username()) + " · saldo " + Ui.dinero(p.saldo()));
@@ -165,6 +191,7 @@ public class PotencialesView implements Vista {
         Ui.cargar(tablaVinculos, vinculos.porPotencial(p.id()));
     }
 
+    /** Prepara el formulario para reclutar un potencial nuevo. */
     private void limpiar() {
         actual = null;
         tabla.getSelectionModel().clearSelection();
@@ -184,6 +211,7 @@ public class PotencialesView implements Vista {
         tablaVinculos.getItems().clear();
     }
 
+    /** Botón Guardar: si es nuevo lo recluta (cuenta + ficha + fondo inicial); si no, actualiza la ficha. */
     private void guardar() {
         Potencial p = new Potencial(actual == null ? 0 : actual.id(), actual == null ? null : actual.usuarioId(), null,
                 Formulario.texto(alias), Formulario.texto(nombre), Formulario.entero(edad), Formulario.texto(habilidad),
@@ -205,6 +233,7 @@ public class PotencialesView implements Vista {
         refrescar();
     }
 
+    /** Abre el diálogo para añadir (v = null) o editar un vínculo. */
     private void editarVinculo(Vinculo v) {
         if (actual == null) throw new DataException("Selecciona primero un potencial.");
         VinculoDialog.mostrar(actual.id(), v).ifPresent(nuevo -> {
@@ -213,6 +242,7 @@ public class PotencialesView implements Vista {
         });
     }
 
+    /** Borra el vínculo seleccionado (pide confirmación). */
     private void borrarVinculo() {
         Vinculo v = tablaVinculos.getSelectionModel().getSelectedItem();
         if (v == null || !Ui.confirmar("¿Eliminar el vínculo con " + v.nombre() + "?")) return;

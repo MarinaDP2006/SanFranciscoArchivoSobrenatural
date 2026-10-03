@@ -10,13 +10,25 @@ import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Acceso a la tabla {@code noticias} (lo que se publica en la web).
+ * <p>
+ * Es un DAO (Data Access Object): SOLO lee y escribe en la base de datos.
+ * No decide reglas de negocio (eso lo hacen las clases de {@code service}).
+ * Todo el SQL usa {@code ?} (PreparedStatement) a través de la clase {@code Jdbc}.
+ */
 public class NoticiaDao {
 
+    /** Consulta base con JOIN para traer el nombre del autor. */
     private static final String SELECT = """
             SELECT n.*, u.nombre_completo AS autor_nombre
             FROM noticias n LEFT JOIN usuarios u ON u.id = n.autor_id
             """;
 
+    /**
+     * Convierte la fila actual del ResultSet en un objeto Noticia.
+     * Se usa como "mapper": {@code Jdbc.query(sql, NoticiaDao::map)}.
+     */
     static Noticia map(ResultSet rs) throws SQLException {
         return new Noticia(rs.getInt("id"), rs.getString("slug"), rs.getString("titulo"), rs.getString("resumen"),
                 rs.getString("contenido"), CategoriaNoticia.valueOf(rs.getString("categoria")),
@@ -25,10 +37,12 @@ public class NoticiaDao {
                 Jdbc.intOrNull(rs, "autor_id"), rs.getString("autor_nombre"));
     }
 
+    /** Todas las noticias (publicadas y borradores), de la más nueva a la más antigua. */
     public List<Noticia> listar() {
         return Jdbc.query(SELECT + " ORDER BY n.fecha_publicacion DESC", NoticiaDao::map);
     }
 
+    /** Crea (id 0) o actualiza una noticia. Al crearla genera su slug a partir del título. */
     public int guardar(Noticia n) {
         if (n.id() == 0) {
             String slug = slugUnico(slugify(n.titulo()));
@@ -48,14 +62,17 @@ public class NoticiaDao {
         return n.id();
     }
 
+    /** Publica o retira una noticia de la web. */
     public void setPublicada(int id, boolean publicada) {
         Jdbc.update("UPDATE noticias SET publicada = ? WHERE id = ?", publicada, id);
     }
 
+    /** Borra una noticia. */
     public void borrar(int id) {
         Jdbc.update("DELETE FROM noticias WHERE id = ?", id);
     }
 
+    /** Si el slug ya existe, le añade -2, -3... hasta que sea único. */
     private String slugUnico(String base) {
         String slug = base;
         int i = 2;
@@ -63,6 +80,10 @@ public class NoticiaDao {
         return slug;
     }
 
+    /**
+     * Convierte un título en un texto apto para URL.
+     * Ejemplo: "¡Niebla récord en el Golden Gate!" → "niebla-record-en-el-golden-gate".
+     */
     public static String slugify(String texto) {
         String s = Normalizer.normalize(texto == null ? "" : texto, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")

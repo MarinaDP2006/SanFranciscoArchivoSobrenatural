@@ -23,16 +23,26 @@ import javafx.scene.layout.VBox;
 import java.util.Arrays;
 import java.util.List;
 
-/** Avisos anónimos enviados por los ciudadanos desde el formulario "Pedir ayuda" de la web. */
+/**
+ * Pantalla Avisos ciudadanos (solo administradores): los avisos anónimos que envían los ciudadanos
+ * desde el formulario "Pedir ayuda" de la web. Desde aquí se convierten en incidente + contrato,
+ * se ponen en revisión o se descartan. El ciudadano ve el resultado con su código de seguimiento.
+ * <p>
+ * Como todas las pantallas, implementa {@link Vista}: {@code vista()} construye los controles
+ * una sola vez y {@code refrescar()} vuelve a leer los datos de MySQL cada vez que se abre.
+ */
 public class SolicitudesView implements Vista {
 
+    // --- Acceso a datos y reglas ---
     private final SolicitudDao dao = new SolicitudDao();
     private final SolicitudService servicio = new SolicitudService();
 
+    // --- Componentes de la pantalla ---
     private VBox raiz;
     private final TableView<SolicitudAyuda> tabla = Ui.tabla("No hay avisos ciudadanos");
     private SolicitudAyuda actual;
 
+    // --- Detalle del aviso y formulario de conversión ---
     private final Label info = new Label("Selecciona un aviso");
     private final TextArea texto = Formulario.area(6);
     private final TextField titular = new TextField();
@@ -42,9 +52,15 @@ public class SolicitudesView implements Vista {
     private final TextField respuesta = new TextField();
     private VBox acciones;
 
+    /**
+     * Construye la pantalla (solo la primera vez; después devuelve la misma).
+     * Aquí se crean las columnas de la tabla, el formulario, los botones y la distribución.
+     */
     @Override
     public Node vista() {
+        // Si ya la habíamos construido, la reutilizamos (así no se pierde lo que estaba seleccionado)
         if (raiz != null) return raiz;
+        // Columnas de la tabla: título, ancho en píxeles y qué dato del objeto mostrar en cada una
         tabla.getColumns().addAll(List.of(
                 Ui.col("Código", 95, SolicitudAyuda::codigo),
                 Ui.colBadge("Estado", 110, s -> s.estado().name()),
@@ -52,6 +68,7 @@ public class SolicitudesView implements Vista {
                 Ui.col("Barrio", 120, SolicitudAyuda::barrio),
                 Ui.col("Recibido", 125, SolicitudAyuda::recibidaEn),
                 Ui.col("Descripción", 300, SolicitudAyuda::descripcion)));
+        // Cuando el usuario selecciona una fila, rellenamos el formulario con sus datos
         tabla.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> mostrar(n));
         texto.setEditable(false);
         info.setWrapText(true);
@@ -71,9 +88,12 @@ public class SolicitudesView implements Vista {
 
         VBox detalle = new VBox(10, Ui.seccion("Aviso ciudadano"), info, texto, acciones);
         detalle.getStyleClass().add("panel");
+        // Dos paneles con una separación que se puede arrastrar (izquierda | derecha)
         SplitPane split = new SplitPane(tabla, detalle);
+        // Posición inicial de la separación (0.5 = mitad)
         split.setDividerPositions(0.58);
         VBox.setVgrow(split, Priority.ALWAYS);
+        // Montamos la pantalla: título + descripción + contenido
         raiz = Ui.pantalla("Avisos ciudadanos",
                 "Llegan de forma anónima desde la web. Al convertirlos se crea un incidente y un contrato SOLICITADO; el ciudadano verá la respuesta con su código.",
                 Ui.fila(Ui.espacio(), Ui.boton("↻ Actualizar", this::refrescar)), split);
@@ -81,11 +101,16 @@ public class SolicitudesView implements Vista {
         return raiz;
     }
 
+    /** Vuelve a leer los datos de MySQL y actualiza la tabla. Se llama cada vez que entras en la pantalla. */
     @Override
     public void refrescar() {
         Ui.cargar(tabla, dao.listar());
     }
 
+    /**
+     * Enseña el aviso seleccionado y propone un titular según su tipo.
+     * Los botones solo se activan si el aviso sigue abierto.
+     */
     private void mostrar(SolicitudAyuda s) {
         actual = s;
         if (s == null) {
@@ -102,6 +127,7 @@ public class SolicitudesView implements Vista {
         texto.setText(s.descripcion());
         boolean abierta = s.estado() == EstadoSolicitud.PENDIENTE || s.estado() == EstadoSolicitud.EN_REVISION;
         acciones.setDisable(!abierta);
+        // Titular propuesto según el tipo (el admin puede cambiarlo antes de convertir)
         titular.setText(switch (s.tipo()) {
             case SECUESTRO -> "Denuncian un secuestro en " + Ui.nvl(s.barrio());
             case ASESINATO -> "Investigan una muerte en " + Ui.nvl(s.barrio());
@@ -110,11 +136,13 @@ public class SolicitudesView implements Vista {
         respuesta.clear();
     }
 
+    /** Devuelve el aviso seleccionado o lanza error si no hay ninguno. */
     private SolicitudAyuda seleccion() {
         if (actual == null) throw new DataException("Selecciona un aviso.");
         return actual;
     }
 
+    /** Botón Convertir: crea el incidente y el contrato (ver SolicitudService.convertir). */
     private void convertir() {
         int contrato = servicio.convertir(seleccion().id(), titular.getText(), publicar.isSelected(), prioridad.getValue(),
                 Formulario.dinero(recompensa), Sesion.id());
@@ -122,11 +150,13 @@ public class SolicitudesView implements Vista {
         Ui.info("Aviso convertido. Se ha creado el contrato #" + contrato + " en estado SOLICITADO.");
     }
 
+    /** Botón Marcar en revisión. */
     private void enRevision() {
         servicio.marcarEnRevision(seleccion().id(), Sesion.id());
         refrescar();
     }
 
+    /** Botón Descartar (pide confirmación). */
     private void descartar() {
         if (!Ui.confirmar("¿Descartar el aviso " + seleccion().codigo() + "?")) return;
         servicio.descartar(actual.id(), respuesta.getText(), Sesion.id());

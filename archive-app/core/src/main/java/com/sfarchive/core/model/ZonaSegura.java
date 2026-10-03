@@ -1,11 +1,30 @@
 package com.sfarchive.core.model;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-/** Punto seguro mostrado en verde en el mapa público. */
+/**
+ * Punto seguro (hospital, comisaría...) que la web pinta en verde en el mapa (tabla {@code zonas_seguras}).
+ * <p>
+ * Es un {@code record}: Java genera solo el constructor, los "getters" (sin get: {@code x.alias()}),
+ * equals, hashCode y toString. Es inmutable: para "cambiarlo" se crea uno nuevo.
+ */
 public record ZonaSegura(
-        int id, String nombre, TipoZona tipo, String direccion, String barrio, double lat, double lng,
-        String telefono, String horario, boolean activa
+        /** Clave primaria (0 = nueva). */
+        int id,
+        /** Nombre del lugar. */
+        String nombre,
+        /** HOSPITAL, POLICIA, BOMBEROS, REFUGIO o TEMPLO. */
+        TipoZona tipo,
+        /** Dirección. */
+        String direccion,
+        /** Barrio. */
+        String barrio,
+        /** Latitud (obligatoria). */
+        double lat,
+        /** Longitud (obligatoria). */
+        double lng,
+        /** Teléfono. */
+        String telefono,
+        /** Horario de apertura. */
+        String horario,
+        /** Si se muestra en la web. */
+        boolean activa
 ) { }

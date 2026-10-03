@@ -21,14 +21,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/** Dashboard mundial: tabla completa de incidentes + mapa en tiempo real con todos los pins. */
+/**
+ * Dashboard mundial (solo administradores): tarjetas con contadores, la base de datos completa
+ * de incidentes (verificados y no verificados) y un mapa en tiempo real con todos los pins:
+ * incidentes por tipo, potenciales en verde y bases de los grupos tácticos en amarillo.
+ * <p>
+ * Como todas las pantallas, implementa {@link Vista}: {@code vista()} construye los controles
+ * una sola vez y {@code refrescar()} vuelve a leer los datos de MySQL cada vez que se abre.
+ */
 public class DashboardView implements Vista {
 
+    // --- Acceso a datos ---
     private final IncidenteDao incidentes = new IncidenteDao();
     private final PotencialDao potenciales = new PotencialDao();
     private final GrupoDao grupos = new GrupoDao();
     private final EstadisticasDao stats = new EstadisticasDao();
 
+    // --- Componentes de la pantalla ---
     private VBox raiz;
     private final HBox kpis = new HBox(10);
     private final TableView<Incidente> tabla = Ui.tabla("Sin incidentes");
@@ -36,9 +45,15 @@ public class DashboardView implements Vista {
     private final MapaFx mapa = new MapaFx();
     private List<Incidente> todos = List.of();
 
+    /**
+     * Construye la pantalla (solo la primera vez; después devuelve la misma).
+     * Aquí se crean las columnas de la tabla, el formulario, los botones y la distribución.
+     */
     @Override
     public Node vista() {
+        // Si ya la habíamos construido, la reutilizamos (así no se pierde lo que estaba seleccionado)
         if (raiz != null) return raiz;
+        // Columnas de la tabla: título, ancho en píxeles y qué dato del objeto mostrar en cada una
         tabla.getColumns().addAll(List.of(
                 Ui.col("Código", 105, Incidente::codigo),
                 Ui.colBadge("Tipo", 110, i -> i.tipo().name()),
@@ -56,10 +71,13 @@ public class DashboardView implements Vista {
         VBox derecha = new VBox(8, Ui.fila(Ui.seccion("Mapa en tiempo real"), Ui.espacio(),
                 Ui.badge("incidente"), Ui.badge("potencial")), mapa);
         VBox.setVgrow(mapa, Priority.ALWAYS);
+        // Dos paneles con una separación que se puede arrastrar (izquierda | derecha)
         SplitPane split = new SplitPane(izquierda, derecha);
+        // Posición inicial de la separación (0.5 = mitad)
         split.setDividerPositions(0.56);
         VBox.setVgrow(split, Priority.ALWAYS);
 
+        // Montamos la pantalla: título + descripción + contenido
         raiz = Ui.pantalla("Dashboard mundial",
                 "Visión general del Archivo. Pins de colores: incidentes por tipo · verde: potenciales · amarillo: bases de grupos tácticos.",
                 Ui.fila(kpis, Ui.espacio(), Ui.boton("↻ Actualizar", this::refrescar)), split);
@@ -67,6 +85,7 @@ public class DashboardView implements Vista {
         return raiz;
     }
 
+    /** Recarga contadores, tabla y mapa desde MySQL. */
     @Override
     public void refrescar() {
         Map<String, Long> r = stats.resumen();
@@ -77,9 +96,11 @@ public class DashboardView implements Vista {
                 Ui.tarjeta("Contratos activos", "" + r.get("contratosActivos"), "k-turquesa"),
                 Ui.tarjeta("Potenciales disponibles", r.get("potencialesDisponibles") + "/" + r.get("potenciales"), "k-verde"),
                 Ui.tarjeta("Avisos pendientes", "" + r.get("solicitudesPendientes"), "k-ambar"));
+        // Guardamos todos los incidentes en memoria para poder filtrarlos sin volver a MySQL
         todos = incidentes.listar();
         filtrar();
 
+        // Preparamos los puntos del mapa: un Pin por incidente, potencial y base de grupo
         List<MapaFx.Pin> pins = new ArrayList<>();
         for (Incidente i : todos) {
             if (i.lat() == null || i.lng() == null) continue;
@@ -96,6 +117,10 @@ public class DashboardView implements Vista {
         mapa.mostrar(pins, 37.7849, -122.40, 11);
     }
 
+    /**
+     * Aplica el filtro del ComboBox (Todos, Verificados, No verificados...) sobre la lista ya cargada,
+     * sin volver a consultar la base de datos.
+     */
     private void filtrar() {
         String f = filtro.getValue();
         Ui.cargar(tabla, todos.stream().filter(i -> switch (f) {

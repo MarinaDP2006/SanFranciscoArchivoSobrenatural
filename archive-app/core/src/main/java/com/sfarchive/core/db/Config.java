@@ -9,21 +9,29 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 /**
- * Configuración de la aplicación. Orden de prioridad (de menor a mayor):
+ * Configuración de la aplicación (sobre todo, cómo conectarse a MySQL).
+ * <p>
+ * Busca cada valor en este orden (gana el primero que encuentre):
  * <ol>
- *     <li>{@code archive.properties} dentro del classpath (valores por defecto)</li>
- *     <li>{@code archive.properties} en el directorio de trabajo</li>
- *     <li>Variables de entorno {@code SFA_DB_URL}, {@code SFA_DB_USER}, ...</li>
+ *     <li>Variable de entorno: {@code db.url} → {@code SFA_DB_URL} (útil al desplegar en Railway...)</li>
+ *     <li>Propiedad de sistema: {@code -Dsfa.db.url=...} al lanzar java</li>
+ *     <li>{@code archive.properties} en la carpeta desde la que arrancas (para cambiarla sin recompilar)</li>
+ *     <li>{@code archive.properties} dentro del proyecto ({@code core/src/main/resources}, valores por defecto)</li>
  * </ol>
+ * Ejemplo: {@code Config.get("db.user", "root")} → "sfa_admin".
  */
 public final class Config {
 
+    /** Aquí se guardan todas las claves leídas de los archivos .properties. */
     private static final Properties PROPS = new Properties();
 
+    // Bloque static: se ejecuta UNA vez, la primera vez que se usa la clase Config.
     static {
+        // 1) Valores por defecto: archive.properties del classpath (dentro del .jar)
         try (InputStream in = Config.class.getResourceAsStream("/archive.properties")) {
             if (in != null) PROPS.load(new java.io.InputStreamReader(in, StandardCharsets.UTF_8));
         } catch (IOException ignored) { }
+        // 2) Si hay un archive.properties en la carpeta actual, sobrescribe los valores anteriores
         Path local = Path.of("archive.properties");
         if (Files.isRegularFile(local)) {
             try (Reader r = Files.newBufferedReader(local, StandardCharsets.UTF_8)) {
@@ -32,17 +40,26 @@ public final class Config {
         }
     }
 
+    /** Clase de utilidades: no se crean objetos de ella. */
     private Config() { }
 
-    /** Devuelve la clave buscando primero en entorno (db.url → SFA_DB_URL). */
+    /**
+     * Devuelve el valor de una clave.
+     *
+     * @param key clave del .properties, p. ej. "db.url"
+     * @param def valor por defecto si no se encuentra en ningún sitio
+     */
     public static String get(String key, String def) {
+        // "db.url" → variable de entorno "SFA_DB_URL"
         String env = System.getenv("SFA_" + key.toUpperCase().replace('.', '_'));
         if (env != null && !env.isBlank()) return env;
+        // "db.url" → propiedad de sistema "sfa.db.url"
         String sys = System.getProperty("sfa." + key);
         if (sys != null && !sys.isBlank()) return sys;
         return PROPS.getProperty(key, def);
     }
 
+    /** Igual que {@link #get} pero convierte el valor a número (si no es un número, usa el valor por defecto). */
     public static int getInt(String key, int def) {
         try {
             return Integer.parseInt(get(key, String.valueOf(def)).trim());

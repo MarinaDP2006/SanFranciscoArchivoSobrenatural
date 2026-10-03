@@ -25,18 +25,27 @@ import javafx.scene.layout.VBox;
 import java.util.Arrays;
 import java.util.List;
 
-/** Archivo Restringido: escribir y guardar el Informe Final Clasificado de cada contrato cerrado. */
+/**
+ * Pantalla Archivo Restringido (solo administradores): escribir y guardar el Informe Final
+ * Clasificado de cada contrato cerrado (completado o fallido). Nada de esto sale a la web.
+ * <p>
+ * Como todas las pantallas, implementa {@link Vista}: {@code vista()} construye los controles
+ * una sola vez y {@code refrescar()} vuelve a leer los datos de MySQL cada vez que se abre.
+ */
 public class ArchivoRestringidoView implements Vista {
 
+    // --- Acceso a datos ---
     private final ContratoDao contratos = new ContratoDao();
     private final InformeDao informes = new InformeDao();
     private final IncidenteDao incidentes = new IncidenteDao();
     private final ActividadDao actividad = new ActividadDao();
 
+    // --- Componentes de la pantalla ---
     private VBox raiz;
     private final TableView<Contrato> tabla = Ui.tabla("Todavía no hay contratos cerrados");
     private Contrato actual;
 
+    // --- Editor del informe ---
     private final Label cabecera = Ui.seccion("Selecciona un contrato cerrado");
     private final Label anomalia = new Label();
     private final TextField titulo = new TextField();
@@ -48,9 +57,15 @@ public class ArchivoRestringidoView implements Vista {
     private final Label meta = new Label();
     private VBox editor;
 
+    /**
+     * Construye la pantalla (solo la primera vez; después devuelve la misma).
+     * Aquí se crean las columnas de la tabla, el formulario, los botones y la distribución.
+     */
     @Override
     public Node vista() {
+        // Si ya la habíamos construido, la reutilizamos (así no se pierde lo que estaba seleccionado)
         if (raiz != null) return raiz;
+        // Columnas de la tabla: título, ancho en píxeles y qué dato del objeto mostrar en cada una
         tabla.getColumns().addAll(List.of(
                 Ui.col("Contrato", 105, Contrato::codigo),
                 Ui.colBadge("Resultado", 110, c -> c.estado().name()),
@@ -58,6 +73,7 @@ public class ArchivoRestringidoView implements Vista {
                 Ui.col("Potencial", 85, Contrato::potencialAlias),
                 Ui.col("Cierre", 120, Contrato::fechaCierre),
                 Ui.colBadge("Informe", 90, c -> c.tieneInforme() ? "COMPLETADO" : "PENDIENTE")));
+        // Cuando el usuario selecciona una fila, rellenamos el formulario con sus datos
         tabla.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> { if (n != null) mostrar(n); });
 
         anomalia.setWrapText(true);
@@ -72,9 +88,12 @@ public class ArchivoRestringidoView implements Vista {
         VBox.setVgrow(contenido, Priority.ALWAYS);
         editor.getStyleClass().add("panel");
 
+        // Dos paneles con una separación que se puede arrastrar (izquierda | derecha)
         SplitPane split = new SplitPane(tabla, editor);
+        // Posición inicial de la separación (0.5 = mitad)
         split.setDividerPositions(0.45);
         VBox.setVgrow(split, Priority.ALWAYS);
+        // Montamos la pantalla: título + descripción + contenido
         raiz = Ui.pantalla("Archivo Restringido",
                 "Solo administradores. Aquí queda la verdad de cada caso: la entidad, lo ocurrido y su resolución. Nada de esto sale a la web.",
                 split);
@@ -82,11 +101,13 @@ public class ArchivoRestringidoView implements Vista {
         return raiz;
     }
 
+    /** Recarga la lista de contratos cerrados. */
     @Override
     public void refrescar() {
         Ui.cargar(tabla, contratos.cerrados());
     }
 
+    /** Carga el informe del contrato (o prepara uno nuevo) y enseña la anomalía registrada. */
     private void mostrar(Contrato c) {
         actual = c;
         editor.setDisable(false);
@@ -104,6 +125,7 @@ public class ArchivoRestringidoView implements Vista {
                 : "Autor: " + Ui.nvl(f.autorNombre()) + " · creado " + Ui.fecha(f.fechaCreacion()) + " · modificado " + Ui.fecha(f.fechaModificacion()));
     }
 
+    /** Botón Guardar informe (crea o actualiza; uno por contrato). */
     private void guardar() {
         if (actual == null) return;
         if (Formulario.texto(titulo) == null) throw new DataException("El informe necesita un título.");
@@ -117,6 +139,7 @@ public class ArchivoRestringidoView implements Vista {
         Ui.info("Informe clasificado guardado.");
     }
 
+    /** Botón Eliminar informe. */
     private void eliminar() {
         if (actual == null || !Ui.confirmar("¿Eliminar el informe de " + actual.codigo() + "?")) return;
         informes.borrar(actual.id());

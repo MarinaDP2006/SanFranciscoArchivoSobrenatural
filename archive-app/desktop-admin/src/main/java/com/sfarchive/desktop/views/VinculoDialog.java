@@ -12,11 +12,19 @@ import javafx.scene.control.TextField;
 
 import java.util.Optional;
 
-/** Diálogo para crear/editar un vínculo familiar (lo usan administradores y potenciales). */
+/**
+ * Diálogo (ventana emergente) para crear o editar un vínculo familiar.
+ * Lo usan los administradores (pantalla Potenciales) y los potenciales (Mis vínculos).
+ */
 final class VinculoDialog {
 
     private VinculoDialog() { }
 
+    /**
+     * Muestra el diálogo y espera a que el usuario pulse Aceptar o Cancelar.
+     * @param v vínculo a editar, o null para crear uno nuevo
+     * @return el vínculo con los datos escritos, o vacío si se canceló o había errores
+     */
     static Optional<Vinculo> mostrar(int potencialId, Vinculo v) {
         TextField nombre = new TextField(v == null ? "" : v.nombre());
         TextField parentesco = new TextField(v == null ? "" : v.parentesco());
@@ -36,6 +44,7 @@ final class VinculoDialog {
         d.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         d.getDialogPane().setPrefWidth(480);
         Ui.prepararDialogo(d.getDialogPane());
+        // Convierte el botón pulsado en el resultado del diálogo: OK → Vinculo, Cancelar → null
         d.setResultConverter(b -> {
             if (b != ButtonType.OK) return null;
             if (Formulario.texto(nombre) == null || Formulario.texto(parentesco) == null) {

@@ -12,11 +12,21 @@ import javafx.scene.layout.Priority;
 
 import java.math.BigDecimal;
 
-/** Rejilla etiqueta/campo para los formularios de edición. */
+/**
+ * Formulario de dos columnas (etiqueta | campo) basado en un GridPane.
+ * <p>
+ * Uso: {@code new Formulario().campo("Nombre", nombre).campo("País", pais)}
+ * (cada {@code campo} añade una fila y devuelve el propio formulario para encadenar llamadas).
+ * <p>
+ * También tiene métodos static para leer los campos de forma segura (texto vacío → null,
+ * números mal escritos → DataException con un mensaje claro).
+ */
 public class Formulario extends GridPane {
 
+    /** Siguiente fila libre de la rejilla. */
     private int fila = 0;
 
+    /** Configura las dos columnas: etiquetas alineadas a la derecha y campos que ocupan el resto. */
     public Formulario() {
         setHgap(10);
         setVgap(8);
@@ -30,6 +40,7 @@ public class Formulario extends GridPane {
         getColumnConstraints().addAll(c1, c2);
     }
 
+    /** Añade una fila: etiqueta a la izquierda y control a la derecha. */
     public Formulario campo(String etiqueta, Node control) {
         Label l = new Label(etiqueta);
         l.getStyleClass().add("etiqueta");
@@ -40,6 +51,7 @@ public class Formulario extends GridPane {
         return this;
     }
 
+    /** Añade un control que ocupa las dos columnas. */
     public Formulario ancho(Node control) {
         add(control, 0, fila, 2, 1);
         fila++;
@@ -47,6 +59,7 @@ public class Formulario extends GridPane {
     }
 
     // ---- Lectura/validación de campos ----
+    /** TextArea (texto de varias líneas) con ajuste de línea. */
     public static TextArea area(int filas) {
         TextArea t = new TextArea();
         t.setWrapText(true);
@@ -54,16 +67,19 @@ public class Formulario extends GridPane {
         return t;
     }
 
+    /** Texto del campo sin espacios; null si está vacío. */
     public static String texto(TextField t) {
         String s = t.getText();
         return s == null || s.isBlank() ? null : s.trim();
     }
 
+    /** Texto del área sin espacios; null si está vacía. */
     public static String texto(TextArea t) {
         String s = t.getText();
         return s == null || s.isBlank() ? null : s.trim();
     }
 
+    /** Lee un número entero; null si está vacío; error claro si no es un número. */
     public static Integer entero(TextField t) {
         String s = texto(t);
         if (s == null) return null;
@@ -74,6 +90,7 @@ public class Formulario extends GridPane {
         }
     }
 
+    /** Lee un decimal (acepta coma o punto); null si está vacío. */
     public static Double decimal(TextField t) {
         String s = texto(t);
         if (s == null) return null;
@@ -84,6 +101,7 @@ public class Formulario extends GridPane {
         }
     }
 
+    /** Lee un importe de dinero (acepta "$", coma o punto); 0 si está vacío. */
     public static BigDecimal dinero(TextField t) {
         String s = texto(t);
         if (s == null) return BigDecimal.ZERO;
@@ -94,6 +112,7 @@ public class Formulario extends GridPane {
         }
     }
 
+    /** Para rellenar campos: null → "". */
     public static String str(Object o) {
         return o == null ? "" : String.valueOf(o);
     }

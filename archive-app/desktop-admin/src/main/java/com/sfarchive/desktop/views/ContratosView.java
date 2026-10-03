@@ -35,23 +35,35 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Gestión de contratos: lista de SOLICITADOS, selector de grupo táctico + potencial y
- * botón ASIGNAR (genera el gasto de transporte automático). También cierra contratos.
+ * Pantalla Gestión de contratos (solo administradores).
+ * <ul>
+ *   <li>Lista de contratos con filtro por estado (por defecto, los SOLICITADOS).</li>
+ *   <li>Panel ASIGNAR: se elige grupo táctico → se cargan sus potenciales DISPONIBLES →
+ *       se ve el coste de transporte calculado → botón ASIGNAR.</li>
+ *   <li>Panel de cierre: completar (paga la recompensa), marcar fallido o cancelar.</li>
+ * </ul>
+ * Toda la lógica está en {@code ContratoService}; esta clase solo recoge lo que elige el usuario.
+ * <p>
+ * Como todas las pantallas, implementa {@link Vista}: {@code vista()} construye los controles
+ * una sola vez y {@code refrescar()} vuelve a leer los datos de MySQL cada vez que se abre.
  */
 public class ContratosView implements Vista {
 
+    // --- Acceso a datos y reglas ---
     private final ContratoDao dao = new ContratoDao();
     private final GrupoDao grupos = new GrupoDao();
     private final PotencialDao potenciales = new PotencialDao();
     private final IncidenteDao incidentes = new IncidenteDao();
     private final ContratoService servicio = new ContratoService();
 
+    // --- Componentes de la pantalla ---
     private VBox raiz;
     private final TableView<Contrato> tabla = Ui.tabla("No hay contratos");
     private final ComboBox<String> filtro = Ui.combo(new ArrayList<>());
     private List<Contrato> todos = List.of();
     private Contrato actual;
 
+    // --- Panel derecho: detalle, asignación y cierre ---
     private final Label detalle = new Label();
     private final TextArea notas = Formulario.area(4);
     private final ComboBox<GrupoTactico> grupo = Ui.combo(List.of(), g -> g.nombre() + " (" + g.miembros() + "/6)");
@@ -63,8 +75,13 @@ public class ContratosView implements Vista {
     private VBox panelAsignar;
     private VBox panelCierre;
 
+    /**
+     * Construye la pantalla (solo la primera vez; después devuelve la misma).
+     * Aquí se crean las columnas de la tabla, el formulario, los botones y la distribución.
+     */
     @Override
     public Node vista() {
+        // Si ya la habíamos construido, la reutilizamos (así no se pierde lo que estaba seleccionado)
         if (raiz != null) return raiz;
         List<String> estados = new ArrayList<>(List.of("Todos", "Abiertos"));
         Arrays.stream(EstadoContrato.values()).forEach(e -> estados.add(e.name()));
@@ -73,6 +90,7 @@ public class ContratosView implements Vista {
         filtro.setMaxWidth(220);
         filtro.setOnAction(e -> filtrar());
 
+        // Columnas de la tabla: título, ancho en píxeles y qué dato del objeto mostrar en cada una
         tabla.getColumns().addAll(List.of(
                 Ui.col("Contrato", 105, Contrato::codigo),
                 Ui.colBadge("Estado", 150, c -> c.estado().name()),
@@ -82,8 +100,10 @@ public class ContratosView implements Vista {
                 Ui.col("Potencial", 90, Contrato::potencialAlias),
                 Ui.colDinero("Recompensa", 100, Contrato::recompensa),
                 Ui.colDinero("Transporte", 90, c -> c.costeTransporte() == null ? null : c.costeTransporte().negate())));
+        // Cuando el usuario selecciona una fila, rellenamos el formulario con sus datos
         tabla.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> mostrar(n));
 
+        // Encadenamos los ComboBox: grupo → potenciales del grupo → coste de transporte
         grupo.setOnAction(e -> cargarPotenciales());
         potencial.setOnAction(e -> calcularTransporte());
         notas.setEditable(false);
@@ -111,9 +131,12 @@ public class ContratosView implements Vista {
 
         VBox izquierda = new VBox(8, Ui.fila(new Label("Estado:"), filtro, Ui.espacio(),
                 Ui.boton("+ Nuevo contrato", this::nuevo), Ui.boton("↻", this::refrescar)), tabla);
+        // Dos paneles con una separación que se puede arrastrar (izquierda | derecha)
         SplitPane split = new SplitPane(izquierda, scroll);
+        // Posición inicial de la separación (0.5 = mitad)
         split.setDividerPositions(0.6);
         VBox.setVgrow(split, Priority.ALWAYS);
+        // Montamos la pantalla: título + descripción + contenido
         raiz = Ui.pantalla("Gestión de contratos",
                 String.format("Selecciona un contrato SOLICITADO, elige grupo táctico y potencial disponible y pulsa ASIGNAR. "
                         + "Transporte automático: %s USD + %s USD/km desde la posición del potencial.", Geo.TARIFA_BASE, Geo.TARIFA_KM),
@@ -122,6 +145,7 @@ public class ContratosView implements Vista {
         return raiz;
     }
 
+    /** Recarga contratos y grupos, y vuelve a seleccionar el contrato que estaba abierto. */
     @Override
     public void refrescar() {
         todos = dao.listar();
@@ -131,6 +155,7 @@ public class ContratosView implements Vista {
                 .ifPresentOrElse(c -> tabla.getSelectionModel().select(c), () -> mostrar(null));
     }
 
+    /** Aplica el filtro de estado sobre la lista cargada. */
     private void filtrar() {
         String f = filtro.getValue();
         Ui.cargar(tabla, todos.stream().filter(c -> switch (f) {
@@ -141,6 +166,10 @@ public class ContratosView implements Vista {
         }).toList());
     }
 
+    /**
+     * Enseña el detalle del contrato y muestra solo el panel que tiene sentido:
+     * ASIGNAR si está SOLICITADO, o cierre si ya está asignado.
+     */
     private void mostrar(Contrato c) {
         actual = c;
         if (c == null) {
@@ -163,6 +192,7 @@ public class ContratosView implements Vista {
         boolean solicitado = c.estado() == EstadoContrato.SOLICITADO;
         boolean abierto = c.estado() == EstadoContrato.ASIGNADO || c.estado() == EstadoContrato.EN_CURSO
                 || c.estado() == EstadoContrato.PENDIENTE_REVISION;
+        // setVisible oculta el panel; setManaged(false) además hace que no ocupe hueco
         panelAsignar.setVisible(solicitado); panelAsignar.setManaged(solicitado);
         panelCierre.setVisible(abierto); panelCierre.setManaged(abierto);
         prioridad.setValue(c.prioridad());
@@ -172,6 +202,7 @@ public class ContratosView implements Vista {
         transporte.setText("—");
     }
 
+    /** Al elegir un grupo, carga en el segundo ComboBox solo sus potenciales DISPONIBLES. */
     private void cargarPotenciales() {
         GrupoTactico g = grupo.getValue();
         potencial.getItems().setAll(g == null ? List.of() : potenciales.porGrupo(g.id()).stream()
@@ -179,17 +210,20 @@ public class ContratosView implements Vista {
         transporte.setText(g != null && potencial.getItems().isEmpty() ? "No hay potenciales disponibles en este grupo" : "—");
     }
 
+    /** Al elegir un potencial, calcula y enseña el coste de transporte ANTES de asignar. */
     private void calcularTransporte() {
         if (actual == null || potencial.getValue() == null) { transporte.setText("—"); return; }
         var t = servicio.calcularTransporte(actual, potencial.getValue());
         transporte.setText(Ui.dinero(t.coste()) + "  (" + t.distanciaKm() + " km) — se descontará del monedero");
     }
 
+    /** Devuelve el contrato seleccionado o lanza error si no hay ninguno. */
     private Contrato seleccion() {
         if (actual == null) throw new DataException("Selecciona un contrato.");
         return actual;
     }
 
+    /** Botón ASIGNAR: llama a ContratoService.asignar y enseña el gasto de transporte generado. */
     private void asignar() {
         Contrato c = seleccion();
         if (grupo.getValue() == null || potencial.getValue() == null)
@@ -201,12 +235,14 @@ public class ContratosView implements Vista {
         refrescar();
     }
 
+    /** Guarda los cambios de prioridad y recompensa. */
     private void guardarDatos() {
         Contrato c = seleccion();
         dao.actualizarDatos(c.id(), prioridad.getValue(), Formulario.dinero(recompensa));
         refrescar();
     }
 
+    /** Botón Completar y pagar (pide confirmación). */
     private void completar() {
         Contrato c = seleccion();
         if (!Ui.confirmar("¿Completar " + c.codigo() + " y pagar " + Ui.dinero(c.recompensa()) + " a " + c.potencialAlias() + "?")) return;
@@ -215,6 +251,7 @@ public class ContratosView implements Vista {
         refrescar();
     }
 
+    /** Botón Marcar fallido: pide el motivo. */
     private void fallido() {
         Contrato c = seleccion();
         String motivo = Ui.pedirTexto("Contrato fallido", "Motivo del fallo:", "").orElse(null);
@@ -223,6 +260,7 @@ public class ContratosView implements Vista {
         refrescar();
     }
 
+    /** Botón Cancelar (pide confirmación). */
     private void cancelar() {
         Contrato c = seleccion();
         if (!Ui.confirmar("¿Cancelar " + c.codigo() + "?" + (c.potencialId() != null ? " Se reembolsará el transporte." : ""))) return;
@@ -230,6 +268,7 @@ public class ContratosView implements Vista {
         refrescar();
     }
 
+    /** Botón Nuevo contrato: elige un incidente sin contrato activo en un diálogo y pide la recompensa. */
     private void nuevo() {
         List<Incidente> libres = incidentes.sinContratoActivo();
         if (libres.isEmpty()) throw new DataException("Todos los incidentes abiertos ya tienen un contrato activo.");

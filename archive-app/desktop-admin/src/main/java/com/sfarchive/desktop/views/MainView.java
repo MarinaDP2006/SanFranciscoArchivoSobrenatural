@@ -20,13 +20,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-/** Ventana principal: menú lateral según el rol + área de contenido. */
+/**
+ * Ventana principal tras el login: menú lateral a la izquierda y la pantalla elegida en el centro.
+ * <p>
+ * El menú cambia según el rol: los administradores ven todas las pantallas de gestión y los
+ * potenciales solo las suyas. Las pantallas se crean la primera vez que se abren y se guardan
+ * en una caché para no reconstruirlas cada vez.
+ */
 public class MainView {
 
+    // BorderPane: left = menú, center = pantalla actual
     private final BorderPane raiz = new BorderPane();
+    // Pantallas ya creadas, por nombre (para reutilizarlas)
     private final Map<String, Vista> cache = new LinkedHashMap<>();
+    // Botones del menú (para marcar cuál está activo)
     private final List<Button> botones = new ArrayList<>();
 
+    /** Construye el menú lateral (según el rol) y abre la primera pantalla. */
     public Parent vista() {
         VBox menu = new VBox();
         menu.getStyleClass().add("sidebar");
@@ -38,6 +48,7 @@ public class MainView {
         sub.getStyleClass().add("marca-sub");
         menu.getChildren().addAll(marca, sub);
 
+        // Menú de ADMINISTRADOR
         if (Sesion.esAdmin()) {
             long pendientes = new SolicitudDao().pendientes();
             grupo(menu, "OPERACIONES");
@@ -57,6 +68,7 @@ public class MainView {
             grupo(menu, "SISTEMA");
             item(menu, "Usuarios y actividad", UsuariosView::new);
         } else {
+            // Menú de POTENCIAL
             grupo(menu, "MI TRABAJO");
             item(menu, "Mis misiones", MisMisionesView::new);
             item(menu, "Mi monedero", MiMonederoView::new);
@@ -83,16 +95,22 @@ public class MainView {
         scrollMenu.setFitToHeight(true);
         scrollMenu.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         raiz.setLeft(scrollMenu);
+        // Simulamos un clic en el primer botón para abrir la primera pantalla
         botones.get(0).fire();
         return raiz;
     }
 
+    /** Añade al menú un título de sección (OPERACIONES, RED DE POTENCIALES...). */
     private void grupo(VBox menu, String texto) {
         Label l = new Label(texto);
         l.getStyleClass().add("menu-grupo");
         menu.getChildren().add(l);
     }
 
+    /**
+     * Añade al menú un botón que abre una pantalla.
+     * @param fabrica cómo crear la pantalla (p. ej. {@code ContratosView::new}); solo se usa la primera vez
+     */
     private void item(VBox menu, String texto, Supplier<Vista> fabrica) {
         Button b = new Button(texto);
         b.getStyleClass().add("menu-item");
@@ -101,6 +119,7 @@ public class MainView {
             botones.forEach(x -> x.getStyleClass().remove("activo"));
             b.getStyleClass().add("activo");
             String clave = texto.replaceAll("\\s+\\(\\d+\\)$", "");
+            // Si la pantalla no existe en la caché la crea con la fábrica; si existe, la reutiliza
             Vista v = cache.computeIfAbsent(clave, k -> fabrica.get());
             Node contenido = v.vista();
             v.refrescar();

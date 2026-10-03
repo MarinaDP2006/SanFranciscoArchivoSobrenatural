@@ -34,19 +34,29 @@ import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 
-/** Alta, edición, verificación y publicación en la web de incidentes. */
+/**
+ * Pantalla Incidentes (solo administradores): alta, edición, verificación y publicación en la web.
+ * La casilla "Publicado en la web" decide si el incidente aparece en el feed y en el mapa público;
+ * la anomalía clasificada nunca se publica.
+ * <p>
+ * Como todas las pantallas, implementa {@link Vista}: {@code vista()} construye los controles
+ * una sola vez y {@code refrescar()} vuelve a leer los datos de MySQL cada vez que se abre.
+ */
 public class IncidentesView implements Vista {
 
+    // --- Acceso a datos y reglas ---
     private final IncidenteDao dao = new IncidenteDao();
     private final ContratoService contratos = new ContratoService();
     private final ActividadDao actividad = new ActividadDao();
 
+    // --- Componentes de la pantalla ---
     private VBox raiz;
     private final TableView<Incidente> tabla = Ui.tabla("Sin incidentes");
     private final TextField buscar = new TextField();
     private List<Incidente> todos = List.of();
     private Incidente actual;
 
+    // --- Campos del formulario ---
     private final Label codigo = new Label("NUEVO");
     private final TextField titulo = new TextField();
     private final ComboBox<TipoIncidente> tipo = Ui.combo(Arrays.asList(TipoIncidente.values()));
@@ -64,9 +74,15 @@ public class IncidentesView implements Vista {
     private final TextArea anomalia = Formulario.area(3);
     private final CheckBox publicado = new CheckBox("Publicado en la web pública");
 
+    /**
+     * Construye la pantalla (solo la primera vez; después devuelve la misma).
+     * Aquí se crean las columnas de la tabla, el formulario, los botones y la distribución.
+     */
     @Override
     public Node vista() {
+        // Si ya la habíamos construido, la reutilizamos (así no se pierde lo que estaba seleccionado)
         if (raiz != null) return raiz;
+        // Columnas de la tabla: título, ancho en píxeles y qué dato del objeto mostrar en cada una
         tabla.getColumns().addAll(List.of(
                 Ui.col("Código", 105, Incidente::codigo),
                 Ui.colBadge("Tipo", 110, i -> i.tipo().name()),
@@ -75,11 +91,13 @@ public class IncidentesView implements Vista {
                 Ui.colBadge("Estado", 140, i -> i.estado().name()),
                 Ui.col("Origen", 90, Incidente::origen),
                 Ui.colBadge("Web", 90, i -> i.publicado() ? "PUBLICADO" : "")));
+        // Cuando el usuario selecciona una fila, rellenamos el formulario con sus datos
         tabla.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> { if (n != null) mostrar(n); });
         buscar.setPromptText("Buscar por título, barrio o código…");
         buscar.textProperty().addListener((o, a, n) -> filtrar());
 
         amenaza.setEditable(true);
+        // Formulario: cada .campo("Etiqueta", control) es una fila etiqueta + campo
         Formulario f = new Formulario()
                 .campo("Código", codigo)
                 .campo("Titular *", titulo)
@@ -105,9 +123,12 @@ public class IncidentesView implements Vista {
         scroll.setFitToWidth(true);
 
         VBox izquierda = new VBox(8, buscar, tabla);
+        // Dos paneles con una separación que se puede arrastrar (izquierda | derecha)
         SplitPane split = new SplitPane(izquierda, scroll);
+        // Posición inicial de la separación (0.5 = mitad)
         split.setDividerPositions(0.55);
         VBox.setVgrow(split, Priority.ALWAYS);
+        // Montamos la pantalla: título + descripción + contenido
         raiz = Ui.pantalla("Incidentes",
                 "Lo que el público ve como un suceso normal. Marca \"Publicado\" para que aparezca en el feed y el mapa de la web; la anomalía nunca se publica.",
                 split);
@@ -115,6 +136,7 @@ public class IncidentesView implements Vista {
         return raiz;
     }
 
+    /** Recuadro informativo que recuerda cuándo aparecen los cambios en la web. */
     private Node avisoWeb() {
         Label l = new Label("Los cambios publicados aparecen en la web en menos de 30 segundos (auto-refresco del feed).");
         l.setWrapText(true);
@@ -122,18 +144,21 @@ public class IncidentesView implements Vista {
         return l;
     }
 
+    /** Vuelve a leer los datos de MySQL y actualiza la tabla. Se llama cada vez que entras en la pantalla. */
     @Override
     public void refrescar() {
         todos = dao.listar();
         filtrar();
     }
 
+    /** Filtra la tabla con el texto del buscador (título, barrio o código). */
     private void filtrar() {
         String q = buscar.getText() == null ? "" : buscar.getText().toLowerCase();
         Ui.cargar(tabla, todos.stream().filter(i -> q.isBlank()
                 || (i.titulo() + " " + i.barrio() + " " + i.codigo()).toLowerCase().contains(q)).toList());
     }
 
+    /** Copia los datos del incidente seleccionado en los campos del formulario. */
     private void mostrar(Incidente i) {
         actual = i;
         codigo.setText(i.codigo() + " · origen " + i.origen().etiqueta());
@@ -154,6 +179,7 @@ public class IncidentesView implements Vista {
         publicado.setSelected(i.publicado());
     }
 
+    /** Vacía el formulario para crear un incidente nuevo. */
     private void limpiar() {
         actual = null;
         tabla.getSelectionModel().clearSelection();
@@ -170,6 +196,10 @@ public class IncidentesView implements Vista {
         publicado.setSelected(false);
     }
 
+    /**
+     * Lee y valida los campos del formulario y construye un Incidente con ellos.
+     * Si algo está mal lanza DataException (se muestra en un diálogo).
+     */
     private Incidente leer() {
         String t = Formulario.texto(titulo);
         String d = Formulario.texto(descripcion);
@@ -194,6 +224,7 @@ public class IncidentesView implements Vista {
                 actual == null ? Sesion.id() : actual.creadoPor());
     }
 
+    /** Botón Guardar: crea el incidente (si es nuevo) o lo actualiza. */
     private void guardar() {
         Incidente i = leer();
         if (i.id() == 0) {
@@ -209,6 +240,10 @@ public class IncidentesView implements Vista {
         Ui.info(i.publicado() ? "Incidente guardado y visible en la web." : "Incidente guardado (no publicado en la web).");
     }
 
+    /**
+     * Botón Crear contrato: pide la recompensa y crea un contrato SOLICITADO.
+     * La prioridad se deduce del nivel de amenaza.
+     */
     private void crearContrato() {
         if (actual == null) throw new DataException("Selecciona primero un incidente.");
         String r = Ui.pedirTexto("Nuevo contrato", "Recompensa (USD) para " + actual.codigo() + ":", "3000").orElse(null);
@@ -225,6 +260,7 @@ public class IncidentesView implements Vista {
         Ui.info("Contrato creado en estado SOLICITADO (prioridad " + p.etiqueta() + "). Asígnalo desde la pantalla Contratos.");
     }
 
+    /** Botón Eliminar (pide confirmación). */
     private void eliminar() {
         if (actual == null) return;
         if (!Ui.confirmar("¿Eliminar " + actual.codigo() + "? Se borrarán también sus contratos e informes.")) return;

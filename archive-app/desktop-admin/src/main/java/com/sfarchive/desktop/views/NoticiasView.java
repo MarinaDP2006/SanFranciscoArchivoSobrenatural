@@ -30,17 +30,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/** Noticias de la web pública: redactar, publicar, destacar o retirar. */
+/**
+ * Pantalla Noticias (solo administradores): redactar, publicar, destacar o retirar las noticias
+ * de la web pública. Al guardar como "Publicada" aparece en la web enseguida.
+ * <p>
+ * Como todas las pantallas, implementa {@link Vista}: {@code vista()} construye los controles
+ * una sola vez y {@code refrescar()} vuelve a leer los datos de MySQL cada vez que se abre.
+ */
 public class NoticiasView implements Vista {
 
+    // --- Acceso a datos ---
     private final NoticiaDao dao = new NoticiaDao();
     private final IncidenteDao incidentes = new IncidenteDao();
     private final ActividadDao actividad = new ActividadDao();
 
+    // --- Componentes de la pantalla ---
     private VBox raiz;
     private final TableView<Noticia> tabla = Ui.tabla("Sin noticias");
     private Noticia actual;
 
+    // --- Campos del formulario ---
     private final TextField titulo = new TextField();
     private final TextField resumen = new TextField();
     private final TextArea contenido = Formulario.area(10);
@@ -52,9 +61,15 @@ public class NoticiasView implements Vista {
     private final CheckBox publicada = new CheckBox("Publicada en la web");
     private final CheckBox destacada = new CheckBox("Destacada en portada");
 
+    /**
+     * Construye la pantalla (solo la primera vez; después devuelve la misma).
+     * Aquí se crean las columnas de la tabla, el formulario, los botones y la distribución.
+     */
     @Override
     public Node vista() {
+        // Si ya la habíamos construido, la reutilizamos (así no se pierde lo que estaba seleccionado)
         if (raiz != null) return raiz;
+        // Columnas de la tabla: título, ancho en píxeles y qué dato del objeto mostrar en cada una
         tabla.getColumns().addAll(List.of(
                 Ui.col("Fecha", 120, Noticia::fechaPublicacion),
                 Ui.colBadge("Categoría", 100, n -> n.categoria().name()),
@@ -62,6 +77,7 @@ public class NoticiasView implements Vista {
                 Ui.colBadge("Estado", 100, n -> n.publicada() ? "PUBLICADO" : "BORRADOR"),
                 Ui.col("Destacada", 75, Noticia::destacada),
                 Ui.col("Autor", 110, Noticia::autorNombre)));
+        // Cuando el usuario selecciona una fila, rellenamos el formulario con sus datos
         tabla.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> { if (n != null) mostrar(n); });
         imagen.setPromptText("URL de imagen (opcional)");
 
@@ -76,14 +92,18 @@ public class NoticiasView implements Vista {
         ScrollPane scroll = new ScrollPane(ficha);
         scroll.setFitToWidth(true);
 
+        // Dos paneles con una separación que se puede arrastrar (izquierda | derecha)
         SplitPane split = new SplitPane(tabla, scroll);
+        // Posición inicial de la separación (0.5 = mitad)
         split.setDividerPositions(0.52);
         VBox.setVgrow(split, Priority.ALWAYS);
+        // Montamos la pantalla: título + descripción + contenido
         raiz = Ui.pantalla("Noticias de la web", "Las noticias son la cara pública del Archivo: informan sin revelar la anomalía.", split);
         limpiar();
         return raiz;
     }
 
+    /** Recarga noticias e incidentes (para el ComboBox de incidente relacionado). */
     @Override
     public void refrescar() {
         List<Incidente> lista = new ArrayList<>();
@@ -93,6 +113,7 @@ public class NoticiasView implements Vista {
         Ui.cargar(tabla, dao.listar());
     }
 
+    /** Copia la noticia al formulario. */
     private void mostrar(Noticia n) {
         actual = n;
         titulo.setText(n.titulo());
@@ -108,6 +129,7 @@ public class NoticiasView implements Vista {
         destacada.setSelected(n.destacada());
     }
 
+    /** Prepara el formulario para una noticia nueva. */
     private void limpiar() {
         actual = null;
         tabla.getSelectionModel().clearSelection();
@@ -120,6 +142,7 @@ public class NoticiasView implements Vista {
         destacada.setSelected(false);
     }
 
+    /** Botón Guardar: valida, conserva la hora original si no cambia el día y guarda. */
     private void guardar() {
         if (Formulario.texto(titulo) == null || Formulario.texto(resumen) == null || Formulario.texto(contenido) == null)
             throw new DataException("Titular, entradilla y texto son obligatorios.");
@@ -140,6 +163,7 @@ public class NoticiasView implements Vista {
         Ui.info(n.publicada() ? "Noticia publicada en la web." : "Noticia guardada como borrador.");
     }
 
+    /** Botón Eliminar (pide confirmación). */
     private void eliminar() {
         if (actual == null || !Ui.confirmar("¿Eliminar la noticia \"" + actual.titulo() + "\"?")) return;
         dao.borrar(actual.id());

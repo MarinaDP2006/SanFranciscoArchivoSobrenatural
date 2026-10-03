@@ -29,15 +29,25 @@ import javafx.scene.layout.VBox;
 
 import java.util.List;
 
-/** Grupos tácticos por país/zona, máximo 6 potenciales. Los miembros se mueven arrastrando. */
+/**
+ * Pantalla Grupos tácticos (solo administradores): crear y editar grupos por país y zona,
+ * y repartir potenciales ARRASTRANDO entre la lista de miembros y la de "sin grupo".
+ * Máximo 6 por grupo (lo comprueba GrupoService y, por si acaso, un trigger de MySQL).
+ * <p>
+ * Como todas las pantallas, implementa {@link Vista}: {@code vista()} construye los controles
+ * una sola vez y {@code refrescar()} vuelve a leer los datos de MySQL cada vez que se abre.
+ */
 public class GruposView implements Vista {
 
+    /** "Etiqueta" del dato que viaja al arrastrar: el id del potencial. */
     private static final DataFormat POTENCIAL = new DataFormat("application/x-sfa-potencial");
 
+    // --- Acceso a datos y reglas ---
     private final GrupoDao dao = new GrupoDao();
     private final PotencialDao potenciales = new PotencialDao();
     private final GrupoService servicio = new GrupoService();
 
+    // --- Componentes de la pantalla ---
     private VBox raiz;
     private final TableView<GrupoTactico> tabla = Ui.tabla("Sin grupos tácticos");
     private final ListView<Potencial> miembros = new ListView<>();
@@ -45,6 +55,7 @@ public class GruposView implements Vista {
     private final Label tituloMiembros = Ui.seccion("Miembros");
     private GrupoTactico actual;
 
+    // --- Campos del formulario ---
     private final TextField nombre = new TextField();
     private final TextField pais = new TextField();
     private final TextField ciudad = new TextField();
@@ -54,9 +65,15 @@ public class GruposView implements Vista {
     private final TextArea descripcion = Formulario.area(2);
     private final CheckBox activo = new CheckBox("Activo");
 
+    /**
+     * Construye la pantalla (solo la primera vez; después devuelve la misma).
+     * Aquí se crean las columnas de la tabla, el formulario, los botones y la distribución.
+     */
     @Override
     public Node vista() {
+        // Si ya la habíamos construido, la reutilizamos (así no se pierde lo que estaba seleccionado)
         if (raiz != null) return raiz;
+        // Columnas de la tabla: título, ancho en píxeles y qué dato del objeto mostrar en cada una
         tabla.getColumns().addAll(List.of(
                 Ui.col("Grupo", 150, GrupoTactico::nombre),
                 Ui.col("País", 110, GrupoTactico::pais),
@@ -65,6 +82,7 @@ public class GruposView implements Vista {
                 Ui.col("Miembros", 75, g -> g.miembros() + " / " + GrupoDao.MAX_MIEMBROS),
                 Ui.colBadge("Activo", 70, g -> g.activo() ? "ACTIVO" : "INACTIVO")));
         tabla.setPrefHeight(230);
+        // Cuando el usuario selecciona una fila, rellenamos el formulario con sus datos
         tabla.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> { if (n != null) mostrar(n); });
 
         configurarLista(miembros, true);
@@ -89,16 +107,29 @@ public class GruposView implements Vista {
         ScrollPane scroll = new ScrollPane(ficha);
         scroll.setFitToWidth(true);
 
+        // Dos paneles con una separación que se puede arrastrar (izquierda | derecha)
         SplitPane split = new SplitPane(izquierda, scroll);
+        // Posición inicial de la separación (0.5 = mitad)
         split.setDividerPositions(0.62);
         VBox.setVgrow(split, Priority.ALWAYS);
+        // Montamos la pantalla: título + descripción + contenido
         raiz = Ui.pantalla("Grupos tácticos", "Crea y edita grupos por país y zona. Máximo " + GrupoDao.MAX_MIEMBROS
                 + " potenciales por grupo (también lo impide un trigger en MySQL).", split);
         limpiar();
         return raiz;
     }
 
+    /**
+     * Activa el arrastrar y soltar en una lista:
+     * <ul>
+     *   <li>setOnDragDetected: empiezo a arrastrar una fila → guardo el id del potencial.</li>
+     *   <li>setOnDragOver: paso por encima de la otra lista → ¿la acepto?</li>
+     *   <li>setOnDragDropped: la suelto → muevo el potencial de grupo en la BD.</li>
+     * </ul>
+     * @param esGrupo true si es la lista de miembros, false si es la de "sin grupo"
+     */
     private void configurarLista(ListView<Potencial> lista, boolean esGrupo) {
+        // Cada fila de la lista es una ListCell: le decimos qué texto pintar y cómo empezar a arrastrarla
         lista.setCellFactory(lv -> {
             ListCell<Potencial> celda = new ListCell<>() {
                 @Override
@@ -118,6 +149,7 @@ public class GruposView implements Vista {
             });
             return celda;
         });
+        // Aceptamos el arrastre si viene de la OTRA lista y el potencial no está ya en esta
         lista.setOnDragOver(e -> {
             if (e.getDragboard().hasContent(POTENCIAL) && e.getGestureSource() != lista
                     && !lista.getItems().stream().anyMatch(p -> p.id() == (Integer) e.getDragboard().getContent(POTENCIAL))) {
@@ -127,6 +159,7 @@ public class GruposView implements Vista {
             e.consume();
         });
         lista.setOnDragExited(e -> lista.getStyleClass().remove("drop-ok"));
+        // Al soltar: movemos el potencial en la base de datos y recargamos las listas
         lista.setOnDragDropped(e -> {
             boolean ok = false;
             if (e.getDragboard().hasContent(POTENCIAL)) {
@@ -144,6 +177,7 @@ public class GruposView implements Vista {
         lista.setPlaceholder(new Label(esGrupo ? "Arrastra aquí potenciales" : "Todos los potenciales tienen grupo"));
     }
 
+    /** Vuelve a leer los datos de MySQL y actualiza la tabla. Se llama cada vez que entras en la pantalla. */
     @Override
     public void refrescar() {
         List<GrupoTactico> gs = dao.listar();
@@ -155,6 +189,7 @@ public class GruposView implements Vista {
         sinGrupo.setItems(FXCollections.observableArrayList(potenciales.porGrupo(null)));
     }
 
+    /** Copia el grupo al formulario y carga sus miembros. */
     private void mostrar(GrupoTactico g) {
         actual = g;
         nombre.setText(g.nombre());
@@ -169,6 +204,7 @@ public class GruposView implements Vista {
         miembros.setItems(FXCollections.observableArrayList(potenciales.porGrupo(g.id())));
     }
 
+    /** Prepara el formulario para crear un grupo nuevo. */
     private void limpiar() {
         actual = null;
         tabla.getSelectionModel().clearSelection();
@@ -181,6 +217,7 @@ public class GruposView implements Vista {
         miembros.getItems().clear();
     }
 
+    /** Botón Guardar (crea o actualiza). */
     private void guardar() {
         GrupoTactico g = new GrupoTactico(actual == null ? 0 : actual.id(), Formulario.texto(nombre), Formulario.texto(pais),
                 Formulario.texto(ciudad) == null ? "" : Formulario.texto(ciudad), Formulario.texto(zona),
@@ -190,6 +227,7 @@ public class GruposView implements Vista {
         refrescar();
     }
 
+    /** Botón Eliminar: sus miembros quedan sin grupo. */
     private void eliminar() {
         if (actual == null) return;
         if (!Ui.confirmar("¿Eliminar " + actual.nombre() + "? Sus miembros quedarán sin grupo.")) return;

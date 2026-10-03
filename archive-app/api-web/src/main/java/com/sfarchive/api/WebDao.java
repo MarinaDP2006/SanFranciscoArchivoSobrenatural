@@ -17,20 +17,25 @@ import java.util.Optional;
  */
 public class WebDao {
 
+    /** Incidente tal como lo ve el público: SIN anomalía clasificada. Se envía a la web como JSON. */
     public record IncidentePublico(int id, String codigo, String titulo, String tipo, String descripcion,
                                    String barrio, String direccion, String ciudad, String pais,
                                    Double lat, Double lng, LocalDateTime fecha, String estado,
                                    LocalDateTime actualizado) { }
 
+    /** Noticia publicada, tal como se envía a la web. */
     public record NoticiaPublica(int id, String slug, String titulo, String resumen, String contenido,
                                  String categoria, String imagenUrl, String barrio, Integer incidenteId,
                                  boolean destacada, LocalDateTime fecha, String autor) { }
 
+    /** Zona segura activa (pin verde del mapa). */
     public record ZonaPublica(int id, String nombre, String tipo, String direccion, String barrio,
                               double lat, double lng, String telefono, String horario) { }
 
+    /** Lo que ve el ciudadano al consultar su código: estado y respuesta, nada más. */
     public record EstadoAyuda(String codigo, String tipo, String estado, LocalDateTime recibida, String respuesta) { }
 
+    /** Convierte una fila de la vista v_incidentes_publicos en un IncidentePublico. */
     private static IncidentePublico incidente(ResultSet rs) throws SQLException {
         return new IncidentePublico(rs.getInt("id"), rs.getString("codigo"), rs.getString("titulo"),
                 rs.getString("tipo"), rs.getString("descripcion_publica"), rs.getString("barrio"),
@@ -39,6 +44,7 @@ public class WebDao {
                 rs.getString("estado_publico"), Jdbc.dateTime(rs, "actualizado_en"));
     }
 
+    /** Convierte una fila de la vista v_noticias_publicas en una NoticiaPublica. */
     private static NoticiaPublica noticia(ResultSet rs) throws SQLException {
         return new NoticiaPublica(rs.getInt("id"), rs.getString("slug"), rs.getString("titulo"),
                 rs.getString("resumen"), rs.getString("contenido"), rs.getString("categoria"),
@@ -46,7 +52,12 @@ public class WebDao {
                 rs.getBoolean("destacada"), Jdbc.dateTime(rs, "fecha_publicacion"), rs.getString("autor"));
     }
 
+    /**
+     * Incidentes publicados con filtros opcionales (tipo, barrio y texto libre).
+     * El SQL se construye añadiendo condiciones solo para los filtros que llegan (siempre con ?).
+     */
     public List<IncidentePublico> incidentes(String tipo, String barrio, String texto) {
+        // "WHERE 1=1" es un truco: así cada filtro puede añadirse siempre con " AND ..."
         StringBuilder sql = new StringBuilder("SELECT * FROM v_incidentes_publicos WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (tipo != null && !tipo.isBlank()) { sql.append(" AND tipo = ?"); params.add(tipo.toUpperCase()); }
@@ -60,10 +71,12 @@ public class WebDao {
         return Jdbc.query(sql.toString(), WebDao::incidente, params.toArray());
     }
 
+    /** Un incidente publicado por id (vacío si no existe o no es público). */
     public Optional<IncidentePublico> incidente(int id) {
         return Jdbc.one("SELECT * FROM v_incidentes_publicos WHERE id = ?", WebDao::incidente, id);
     }
 
+    /** Noticias publicadas (opcionalmente de una categoría), como mucho {@code limite}. */
     public List<NoticiaPublica> noticias(String categoria, int limite) {
         if (categoria != null && !categoria.isBlank()) {
             return Jdbc.query("SELECT * FROM v_noticias_publicas WHERE categoria = ? ORDER BY destacada DESC, fecha_publicacion DESC LIMIT ?",
@@ -72,15 +85,18 @@ public class WebDao {
         return Jdbc.query("SELECT * FROM v_noticias_publicas ORDER BY fecha_publicacion DESC LIMIT ?", WebDao::noticia, limite);
     }
 
+    /** Una noticia por su slug (el texto de la URL). */
     public Optional<NoticiaPublica> noticia(String slug) {
         return Jdbc.one("SELECT * FROM v_noticias_publicas WHERE slug = ?", WebDao::noticia, slug);
     }
 
+    /** Noticias relacionadas con un incidente (para la página del expediente). */
     public List<NoticiaPublica> noticiasDeIncidente(int incidenteId) {
         return Jdbc.query("SELECT * FROM v_noticias_publicas WHERE incidente_id = ? ORDER BY fecha_publicacion DESC",
                 WebDao::noticia, incidenteId);
     }
 
+    /** Zonas seguras activas. */
     public List<ZonaPublica> zonasSeguras() {
         return Jdbc.query("SELECT * FROM zonas_seguras WHERE activa = 1 ORDER BY tipo, nombre",
                 rs -> new ZonaPublica(rs.getInt("id"), rs.getString("nombre"), rs.getString("tipo"),
@@ -88,6 +104,10 @@ public class WebDao {
                         rs.getString("telefono"), rs.getString("horario")));
     }
 
+    /**
+     * Contadores para la portada de la web: total, por tipo, por estado y los barrios con más casos.
+     * Se devuelve un Map que Jackson convierte en un objeto JSON.
+     */
     public Map<String, Object> estadisticas() {
         Map<String, Object> m = new LinkedHashMap<>();
         Map<String, Long> porTipo = new LinkedHashMap<>();
@@ -116,6 +136,7 @@ public class WebDao {
         return m;
     }
 
+    /** Estado de un aviso ciudadano a partir de su código. */
     public Optional<EstadoAyuda> estadoAyuda(String codigo) {
         return Jdbc.one("SELECT codigo_seguimiento, tipo, estado, recibida_en, respuesta_publica FROM solicitudes_ayuda WHERE codigo_seguimiento = ?",
                 rs -> new EstadoAyuda(rs.getString(1), rs.getString(2), rs.getString(3), Jdbc.dateTime(rs, "recibida_en"),

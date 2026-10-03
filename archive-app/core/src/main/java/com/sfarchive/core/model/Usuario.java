@@ -1,11 +1,29 @@
 package com.sfarchive.core.model;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/** Cuenta con acceso a la aplicación de gestión (solo administradores y potenciales). */
+/**
+ * Cuenta de acceso a la aplicación de gestión (tabla {@code usuarios}).
+ * Solo existen cuentas para administradores y potenciales: los ciudadanos nunca se registran.
+ * <p>
+ * Es un {@code record}: Java genera solo el constructor, los "getters" (sin get: {@code x.alias()}),
+ * equals, hashCode y toString. Es inmutable: para "cambiarlo" se crea uno nuevo.
+ */
 public record Usuario(
-        int id, String username, String email, Rol rol, String nombreCompleto,
-        boolean activo, LocalDateTime ultimoAcceso, Integer potencialId
+        /** Clave primaria. */
+        int id,
+        /** Nombre de usuario para el login (en minúsculas, p. ej. "nina"). */
+        String username,
+        /** Correo de la cuenta. */
+        String email,
+        /** ADMIN o POTENCIAL: decide qué menú ve en la app. */
+        Rol rol,
+        /** Nombre que se muestra en pantalla. */
+        String nombreCompleto,
+        /** Si es false no puede iniciar sesión. */
+        boolean activo,
+        /** Fecha del último login (puede ser null). */
+        LocalDateTime ultimoAcceso,
+        /** Id de su ficha en {@code potenciales} si es POTENCIAL; null si es ADMIN. */
+        Integer potencialId
 ) { }

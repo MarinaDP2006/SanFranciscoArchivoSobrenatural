@@ -10,26 +10,43 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Mapa oscuro de Leaflet dentro de un WebView de JavaFX.
- * Leaflet va incluido en el jar; solo las teselas del mapa base requieren conexión.
+ * Mapa oscuro de Leaflet dentro de la aplicación JavaFX.
+ * <p>
+ * JavaFX tiene un mini navegador ({@link WebView}). Le pasamos una página HTML generada aquí
+ * con Leaflet (la misma librería de mapas de la web) y los puntos a dibujar.
+ * Leaflet va dentro del .jar (resources/.../leaflet); solo las imágenes del mapa (teselas) vienen de internet.
+ * <p>
+ * Uso: {@code mapa.mostrar(listaDePins, latitud, longitud, zoom)}
  */
 public class MapaFx extends StackPane {
 
+    /** El navegador interno donde se carga el mapa. */
     private final WebView web = new WebView();
 
-    /** Punto que se dibuja en el mapa. */
+    /** Un punto del mapa: coordenadas, color, título, texto del globo y tamaño (radio en píxeles). */
     public record Pin(double lat, double lng, String color, String titulo, String detalle, int radio) { }
 
+    /** Código de Leaflet (se lee una vez del .jar y se guarda). */
     private static String leafletJs;
+    /** Estilos de Leaflet (se leen una vez del .jar y se guardan). */
     private static String leafletCss;
 
+    /** Crea el contenedor del mapa (sin menú contextual del navegador). */
     public MapaFx() {
         web.setContextMenuEnabled(false);
         getChildren().add(web);
         setMinHeight(260);
     }
 
+    /**
+     * Dibuja el mapa con los pins indicados.
+     * @param pins      puntos a dibujar
+     * @param latCentro latitud del centro inicial
+     * @param lngCentro longitud del centro inicial
+     * @param zoom      nivel de zoom (11-12 = ciudad entera, 15 = calle)
+     */
     public void mostrar(List<Pin> pins, double latCentro, double lngCentro, int zoom) {
+        // 1) Convertimos la lista de pins en un array JSON que entienda JavaScript
         StringBuilder datos = new StringBuilder("[");
         for (Pin p : pins) {
             if (datos.length() > 1) datos.append(',');
@@ -37,6 +54,8 @@ public class MapaFx extends StackPane {
                     p.lat(), p.lng(), json(p.color()), json(p.titulo()), json(p.detalle()), p.radio()));
         }
         datos.append(']');
+        // 2) Montamos la página HTML: CSS + JS de Leaflet + el mapa + un bucle que pinta cada pin.
+        //    Los %s y %d se sustituyen con .formatted(...) al final
         String html = """
                 <!doctype html><html><head><meta charset="utf-8">
                 <style>%s
@@ -55,9 +74,11 @@ public class MapaFx extends StackPane {
                 });
                 </script></body></html>""".formatted(leafletCss(), leafletJs(),
                 String.format(Locale.ROOT, "%.5f", latCentro), String.format(Locale.ROOT, "%.5f", lngCentro), zoom, datos);
+        // 3) Cargamos la página en el WebView
         web.getEngine().loadContent(html);
     }
 
+    /** Convierte un texto Java en un texto JSON seguro (escapa comillas, saltos de línea y '<'). */
     private static String json(String s) {
         if (s == null) return "\"\"";
         StringBuilder sb = new StringBuilder("\"");
@@ -74,16 +95,19 @@ public class MapaFx extends StackPane {
         return sb.append('"').toString();
     }
 
+    /** Devuelve el JavaScript de Leaflet (leído una sola vez). */
     private static synchronized String leafletJs() {
         if (leafletJs == null) leafletJs = recurso("leaflet/leaflet.js");
         return leafletJs;
     }
 
+    /** Devuelve el CSS de Leaflet (leído una sola vez). */
     private static synchronized String leafletCss() {
         if (leafletCss == null) leafletCss = recurso("leaflet/leaflet.css");
         return leafletCss;
     }
 
+    /** Lee un archivo de texto de resources (dentro del .jar). */
     private static String recurso(String ruta) {
         try (InputStream in = MapaFx.class.getResourceAsStream("/com/sfarchive/desktop/" + ruta)) {
             return in == null ? "" : new String(in.readAllBytes(), StandardCharsets.UTF_8);
@@ -92,6 +116,7 @@ public class MapaFx extends StackPane {
         }
     }
 
+    /** Color de cada tipo de incidente (el mismo que en la web). */
     public static String colorTipo(String tipo) {
         return switch (tipo) {
             case "SECUESTRO" -> "#f5a524";

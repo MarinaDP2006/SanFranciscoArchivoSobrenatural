@@ -16,17 +16,23 @@ import com.sfarchive.core.model.SolicitudAyuda;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/** Gestión de los avisos anónimos que llegan desde la web ("pedir ayuda"). */
+/**
+ * Gestión de los avisos anónimos que llegan desde la web ("Pedir ayuda").
+ * <p>
+ * Es un servicio: contiene las REGLAS (qué se puede hacer y qué no) y usa los DAO para guardar.
+ * Si algo no está permitido lanza {@code DataException} con el mensaje que verá el usuario.
+ */
 public class SolicitudService {
 
+    // DAOs que necesita este servicio (cada uno habla con su tabla)
     private final SolicitudDao solicitudes = new SolicitudDao();
     private final IncidenteDao incidentes = new IncidenteDao();
     private final ContratoDao contratos = new ContratoDao();
     private final ActividadDao actividad = new ActividadDao();
 
     /**
-     * Convierte la solicitud en un incidente (opcionalmente publicado en la web)
-     * y crea un contrato SOLICITADO para poder asignarlo.
+     * Convierte el aviso en un incidente VERIFICADO (publicado en la web si {@code publicar} es true)
+     * y crea un contrato SOLICITADO para poder asignarlo. El ciudadano verá "Atendido" con su código.
      *
      * @return id del contrato creado
      */
@@ -49,6 +55,7 @@ public class SolicitudService {
         });
     }
 
+    /** Marca el aviso como "en revisión" (el ciudadano lo verá al consultar su código). */
     public void marcarEnRevision(int solicitudId, int adminId) {
         Jdbc.inTransaction(c -> {
             solicitudes.actualizarEstado(c, solicitudId, EstadoSolicitud.EN_REVISION, null,
@@ -57,6 +64,7 @@ public class SolicitudService {
         });
     }
 
+    /** Descarta el aviso (no había incidente real) con una respuesta para el ciudadano. */
     public void descartar(int solicitudId, String respuesta, int adminId) {
         Jdbc.inTransaction(c -> {
             solicitudes.actualizarEstado(c, solicitudId, EstadoSolicitud.DESCARTADA, null,
