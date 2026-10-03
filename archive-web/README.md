@@ -23,8 +23,7 @@ cd ../archive-app && java -jar api-web/target/sfa-api.jar   # → http://localho
 Para servirla por separado (la web detecta la API en `localhost:8080`):
 
 ```bash
-python -m http.server 5500 --directory public      # → http://localhost:5500
-# o: node scripts/serve.mjs 5500
+python -m http.server 5500 --directory public      # → http://localhost:5500 (o: npx serve public)
 ```
 
 No abras los HTML con `file://`: los módulos JavaScript necesitan un servidor.
