@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Oswald:wght@500;600&display=swap">
+  <title>Noticia · San Francisco Archive</title>
+  <link rel="stylesheet" href="css/archivo.css">
+</head>
+<body data-page="noticias">
+  <main id="contenido">
+    <section class="section">
+      <div class="wrap">
+        <article class="article" id="articulo" aria-live="polite"><p class="empty">Cargando…</p></article>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="js/layout.js"></script>
+  <script type="module">
+    import { api } from "./js/api.js";
+    import { CATEGORIAS, el, fechaHora, param, parrafos, portada } from "./js/ui.js";
+
+    const cont = document.getElementById("articulo");
+    const slug = param("slug");
+    try {
+      if (!slug) throw new Error("Noticia no indicada");
+      const n = await api.noticia(slug);
+      document.title = n.titulo + " · San Francisco Archive";
+      cont.replaceChildren(
+        el("p", { class: "breadcrumb" }, el("a", { href: "noticias.html", text: "Noticias" }), " / ", CATEGORIAS[n.categoria] ?? n.categoria),
+        el("h1", { text: n.titulo }),
+        el("div", { class: "meta" }, fechaHora(n.fecha), n.barrio ? "· " + n.barrio : null, n.autor ? "· Por " + n.autor : null),
+        el("p", { class: "lead", text: n.resumen }),
+        portada(n),
+        el("div", { class: "content", style: "margin-top:24px" }, parrafos(n.contenido)),
+        n.incidenteId ? el("p", {}, el("a", { class: "btn", href: "incidente.html?id=" + n.incidenteId, text: "Ver expediente relacionado →" })) : null,
+        el("p", { style: "margin-top:28px" }, el("a", { href: "noticias.html", text: "← Volver a noticias" })));
+    } catch (e) {
+      cont.replaceChildren(el("h1", { text: "Noticia no encontrada" }),
+        el("p", { class: "lead", text: "Puede que se haya retirado del archivo." }),
+        el("a", { class: "btn", href: "noticias.html", text: "Ver todas las noticias" }));
+    }
+  </script>
+</body>
+</html>

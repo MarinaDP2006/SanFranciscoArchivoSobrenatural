@@ -1,8 +1,17 @@
 # Artefactos generados por Maven
 **/target/
 **/.LCK*
+archive-app/dist/
+archive-app/build-exe/
+
+# Configuración local (contraseñas reales)
+archive-app/archive.properties
+**/archive.properties
+!archive-app/core/src/main/resources/archive.properties
 
 # Configuración local de IDE
 .idea/
 **/.idea/
 *.iml
+.vscode/
+node_modules/

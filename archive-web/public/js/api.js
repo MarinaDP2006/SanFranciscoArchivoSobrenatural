@@ -1,148 +1,99 @@
-﻿import { CONFIG } from "./config.js";
+import { CONFIG } from "./config.js";
 
-const CLAVE_SESION = "sanfrancisco-archive.session";
+let modoDemo = false;
+let demoCache = null;
 
-/**
- * Recupera el feed de incidentes públicos.
- *
- * @returns {Promise<Array<object>>} incidentes visibles públicamente
- */
-export function getFeedPublico() {
-  if (!CONFIG.API_BASE) {
-    return fetch(new URL("../data/mock-incidents.json", import.meta.url))
-      .then((respuesta) => {
-        if (!respuesta.ok) {
-          throw new Error(`No se pudieron cargar los registros de ejemplo (HTTP ${respuesta.status}).`);
-        }
-        return respuesta.json();
-      });
+/** Indica si la web está mostrando la copia de demostración por falta de API. */
+export const enModoDemo = () => modoDemo;
+
+async function cargarDemo() {
+  if (!demoCache) {
+    const r = await fetch(CONFIG.DEMO_JSON);
+    if (!r.ok) throw new Error("Sin conexión con el archivo");
+    demoCache = await r.json();
   }
-  return solicitar("/incidentes/publicos");
+  if (!modoDemo) {
+    modoDemo = true;
+    document.dispatchEvent(new CustomEvent("sfa:demo"));
+  }
+  return demoCache;
 }
 
 /**
- * Inicia sesión y guarda el token de sesión en el navegador.
- *
- * @param {string} username nombre de usuario
- * @param {string} password contraseña
- * @returns {Promise<object>} sesión devuelta por la API
+ * Petición GET a la API. Si la API no responde, usa la instantánea data/demo.json
+ * para que la web siga siendo navegable (por ejemplo, en un hosting estático).
  */
-export async function iniciarSesion(username, password) {
-  const sesion = await solicitar("/auth/login", {
-    method: "POST",
-    body: { username, password },
-  });
-  if (!sesion?.token) {
-    throw new Error("La API no devolvió un token de sesión.");
-  }
-  localStorage.setItem(CLAVE_SESION, JSON.stringify(sesion));
-  return sesion;
-}
-
-/**
- * Devuelve la sesión local si existe y contiene un token.
- *
- * @returns {object|null} sesión almacenada o null
- */
-export function obtenerSesion() {
+async function get(ruta, demo) {
   try {
-    const sesion = JSON.parse(localStorage.getItem(CLAVE_SESION) ?? "null");
-    return sesion?.token ? sesion : null;
-  } catch {
-    localStorage.removeItem(CLAVE_SESION);
-    return null;
-  }
-}
-
-/**
- * Invalida la sesión en la API y elimina la copia local.
- *
- * @returns {Promise<void>} finalización del cierre de sesión
- */
-export async function cerrarSesion() {
-  const sesion = obtenerSesion();
-  try {
-    if (sesion) {
-      await solicitar("/auth/logout", { method: "POST", token: sesion.token });
+    const r = await fetch(CONFIG.API_BASE + ruta, { headers: { Accept: "application/json" } });
+    if (r.status === 404) {
+      const e = new Error((await r.json().catch(() => ({}))).error || "No encontrado");
+      e.status = 404;
+      throw e;
     }
-  } finally {
-    localStorage.removeItem(CLAVE_SESION);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    modoDemo = false;
+    return await r.json();
+  } catch (err) {
+    if (err.status === 404 || !demo) throw err;
+    return demo(await cargarDemo());
   }
 }
 
-/**
- * Recupera los contratos del reporter autenticado.
- *
- * @param {string} token token Bearer de la sesión
- * @returns {Promise<Array<object>>} contratos del usuario
- */
-export function getContratosReporter(token) {
-  return solicitar("/contratos/mios", { token });
-}
+export const api = {
+  incidentes: (filtros = {}) => {
+    const qs = new URLSearchParams(Object.entries(filtros).filter(([, v]) => v)).toString();
+    return get("/incidentes" + (qs ? "?" + qs : ""), (d) => filtrarIncidentes(d.incidentes, filtros));
+  },
+  incidente: (id) => get(`/incidentes/${encodeURIComponent(id)}`, (d) => {
+    const inc = d.incidentes.find((i) => String(i.id) === String(id));
+    if (!inc) throw Object.assign(new Error("Incidente no encontrado"), { status: 404 });
+    return { incidente: inc, noticias: d.noticias.filter((n) => n.incidenteId === inc.id) };
+  }),
+  noticias: (categoria, limite = 20) => {
+    const qs = new URLSearchParams({ limite });
+    if (categoria) qs.set("categoria", categoria);
+    return get("/noticias?" + qs, (d) => d.noticias
+      .filter((n) => !categoria || n.categoria === categoria)
+      .slice(0, limite));
+  },
+  noticia: (slug) => get(`/noticias/${encodeURIComponent(slug)}`, (d) => {
+    const n = d.noticias.find((x) => x.slug === slug);
+    if (!n) throw Object.assign(new Error("Noticia no encontrada"), { status: 404 });
+    return n;
+  }),
+  zonas: () => get("/zonas-seguras", (d) => d.zonas),
+  estadisticas: () => get("/estadisticas", (d) => d.estadisticas),
 
-/**
- * Recupera los incidentes públicos que pueden asociarse a un contrato.
- *
- * @returns {Promise<Array<object>>} incidentes visibles
- */
-export function getIncidentesPublicos() {
-  return getFeedPublico();
-}
+  /** Envía una solicitud de ayuda anónima. Nunca usa la demo: necesita la API real. */
+  async pedirAyuda(datos) {
+    let r;
+    try {
+      r = await fetch(CONFIG.API_BASE + "/ayuda", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(datos),
+      });
+    } catch {
+      throw new Error("No hay conexión con el archivo. Si es una emergencia, llama al 911.");
+    }
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(json.error || `Error ${r.status}`);
+    return json;
+  },
 
-/**
- * Crea un contrato para el reporter autenticado.
- *
- * @param {object} payload datos del contrato
- * @param {string} token token Bearer de la sesión
- * @returns {Promise<object>} contrato creado
- */
-export function crearContrato(payload, token) {
-  return solicitar("/contratos", { method: "POST", token, body: payload });
-}
+  async estadoAyuda(codigo) {
+    const r = await fetch(CONFIG.API_BASE + "/ayuda/" + encodeURIComponent(codigo.trim().toUpperCase()))
+      .catch(() => { throw new Error("No hay conexión con el archivo."); });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(json.error || `Error ${r.status}`);
+    return json;
+  },
+};
 
-/**
- * Envía una solicitud HTTP a la API local y procesa su respuesta.
- *
- * @param {string} ruta ruta relativa al prefijo /api
- * @param {{method?: string, token?: string, body?: object}} opciones opciones de la solicitud
- * @returns {Promise<any>} objeto JSON de respuesta, o null si no hay cuerpo
- */
-async function solicitar(ruta, opciones = {}) {
-  if (!CONFIG.API_BASE) {
-    throw new Error("La API no está configurada. El acceso reporter requiere un servidor API.");
-  }
-
-  const cabeceras = { Accept: "application/json" };
-  if (opciones.body !== undefined) {
-    cabeceras["Content-Type"] = "application/json";
-  }
-  if (opciones.token) {
-    cabeceras.Authorization = `Bearer ${opciones.token}`;
-  }
-
-  let respuesta;
-  try {
-    respuesta = await fetch(`${CONFIG.API_BASE}${ruta}`, {
-      method: opciones.method ?? "GET",
-      headers: cabeceras,
-      ...(opciones.body === undefined ? {} : { body: JSON.stringify(opciones.body) }),
-    });
-  } catch (error) {
-    throw new Error("No se pudo conectar con la API configurada.", { cause: error });
-  }
-
-  if (respuesta.status === 204) {
-    return null;
-  }
-
-  const tipoContenido = respuesta.headers.get("content-type") ?? "";
-  const cuerpo = tipoContenido.includes("application/json")
-    ? await respuesta.json()
-    : await respuesta.text();
-
-  if (!respuesta.ok) {
-    const detalle = typeof cuerpo === "object" ? cuerpo?.error : cuerpo;
-    throw new Error(detalle || `La API respondió HTTP ${respuesta.status}.`);
-  }
-  return cuerpo;
+function filtrarIncidentes(lista, { tipo, q, barrio } = {}) {
+  const texto = (q || "").toLowerCase();
+  return lista.filter((i) => (!tipo || i.tipo === tipo)
+    && (!barrio || i.barrio === barrio)
+    && (!texto || [i.titulo, i.descripcion, i.barrio].join(" ").toLowerCase().includes(texto)));
 }
