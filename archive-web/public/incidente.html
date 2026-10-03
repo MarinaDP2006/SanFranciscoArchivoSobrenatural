@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Oswald:wght@500;600&display=swap">
+  <title>Expediente · San Francisco Archive</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <link rel="stylesheet" href="css/archivo.css">
+</head>
+<body data-page="mapa">
+  <main id="contenido">
+    <section class="section">
+      <div class="wrap" id="exp" aria-live="polite"><p class="empty">Cargando expediente…</p></div>
+    </section>
+  </main>
+  <script type="module" src="js/layout.js"></script>
+  <script type="module">
+    import { api } from "./js/api.js";
+    import { crearMapa } from "./js/mapa.js";
+    import { el, etiquetaTipo, fechaHora, param, parrafos, tagEstado, tagTipo, tarjetaNoticia } from "./js/ui.js";
+
+    const cont = document.getElementById("exp");
+    try {
+      const id = param("id");
+      if (!id) throw new Error();
+      const { incidente: i, noticias } = await api.incidente(id);
+      document.title = i.titulo + " · San Francisco Archive";
+      const tieneMapa = Number.isFinite(i.lat) && Number.isFinite(i.lng);
+      cont.replaceChildren(
+        el("p", { class: "breadcrumb" }, el("a", { href: "index.html#monitor", text: "Monitor" }), " / Expediente " + i.codigo),
+        el("div", { class: "split", style: "margin-top:12px" },
+          el("div", { class: "article" },
+            el("div", { class: "meta" }, tagTipo(i.tipo), tagEstado(i.estado)),
+            el("h1", { text: i.titulo }),
+            el("div", { class: "content" }, parrafos(i.descripcion)),
+            el("div", { class: "alert warn", style: "margin-top:16px" },
+              "Parte de la información de este expediente está ", el("span", { class: "redacted", text: "clasificada" }),
+              ". Si tienes datos sobre el caso, ", el("a", { href: "ayuda.html?tipo=" + i.tipo, text: "envíalos de forma anónima" }), ".")),
+          el("aside", {},
+            el("div", { class: "dossier" }, el("dl", {},
+              el("dt", { text: "Código" }), el("dd", { text: i.codigo }),
+              el("dt", { text: "Tipo" }), el("dd", { text: etiquetaTipo(i.tipo) }),
+              el("dt", { text: "Fecha" }), el("dd", { text: fechaHora(i.fecha) }),
+              el("dt", { text: "Lugar" }), el("dd", { text: [i.direccion, i.barrio].filter(Boolean).join(" · ") || "—" }),
+              el("dt", { text: "Ciudad" }), el("dd", { text: i.ciudad + ", " + i.pais }),
+              el("dt", { text: "Estado" }), el("dd", { text: i.estado }),
+              el("dt", { text: "Actualizado" }), el("dd", { text: fechaHora(i.actualizado) }))),
+            tieneMapa ? el("div", { id: "mini", class: "map sm", style: "margin-top:16px" }) : null)),
+        noticias.length ? el("div", { style: "margin-top:40px" },
+          el("h2", { style: "text-transform:uppercase;margin-bottom:16px", text: "Noticias relacionadas" }),
+          el("div", { class: "news-grid" }, noticias.map((n) => tarjetaNoticia(n)))) : null);
+      if (tieneMapa) {
+        const m = crearMapa("mini", { centro: [i.lat, i.lng], zoom: 15 });
+        m.incidentes([i]);
+        api.zonas().then((z) => m.zonas(z)).catch(() => {});
+      }
+    } catch {
+      cont.replaceChildren(el("h1", { text: "Expediente no disponible" }),
+        el("p", { class: "lead", text: "Este expediente no existe o no es público." }),
+        el("a", { class: "btn", href: "index.html#monitor", text: "Volver al monitor" }));
+    }
+  </script>
+</body>
+</html>

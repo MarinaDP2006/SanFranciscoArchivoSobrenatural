@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Oswald:wght@500;600&display=swap">
+  <title>Pedir ayuda · San Francisco Archive</title>
+  <meta name="description" content="Envía un aviso anónimo al San Francisco Archive. Sin registro.">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <link rel="stylesheet" href="css/archivo.css">
+</head>
+<body data-page="ayuda">
+  <main id="contenido">
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Canal ciudadano · anónimo</p>
+            <h1 style="font-size:clamp(34px,5vw,56px);text-transform:uppercase">Pedir ayuda</h1>
+            <p>No necesitas crear una cuenta. Cuéntanos qué ha pasado, marca el lugar en el mapa y guarda el código que te daremos para seguir tu aviso.</p>
+          </div>
+        </div>
+
+        <div class="emergency" style="margin-bottom:24px">
+          <strong>¿Hay una vida en peligro ahora mismo?</strong> Llama primero al <a href="tel:911">911</a>. Este formulario no sustituye a los servicios de emergencia.
+        </div>
+
+        <div class="split">
+          <form class="form panel" id="form-ayuda" style="padding:20px" novalidate>
+            <fieldset style="border:0;padding:0;margin:0;display:grid;gap:8px">
+              <legend style="font-size:12px;color:var(--muted);margin-bottom:6px"><b style="color:var(--text)">¿Qué ha ocurrido?</b> *</legend>
+              <div class="radio-tipos">
+                <label><input type="radio" name="tipo" value="SECUESTRO" required><span>Secuestro</span></label>
+                <label><input type="radio" name="tipo" value="DESAPARICION"><span>Desaparición</span></label>
+                <label><input type="radio" name="tipo" value="ASESINATO"><span>Muerte extraña</span></label>
+              </div>
+            </fieldset>
+            <label><b>Describe lo que sabes *</b>
+              <textarea name="descripcion" id="descripcion" required minlength="20" maxlength="2000"
+                placeholder="Quién, cuándo, dónde lo viste por última vez, cualquier detalle extraño…"></textarea>
+              <span class="hint" id="contador">0 / 2000 · mínimo 20 caracteres</span>
+            </label>
+            <div class="row">
+              <label><b>Barrio</b>
+                <select name="barrio" id="barrio"><option value="">— Selecciona —</option></select>
+              </label>
+              <label><b>Calle o referencia</b>
+                <input name="ubicacion" maxlength="160" placeholder="Ej. Dolores St &amp; 16th St">
+              </label>
+            </div>
+            <label><b>Contacto (opcional)</b>
+              <input name="contacto" maxlength="120" placeholder="Email o teléfono, solo si quieres que te contactemos">
+              <span class="hint">Puedes dejarlo en blanco. Tu aviso seguirá siendo útil.</span>
+            </label>
+            <label class="hp" aria-hidden="true">No rellenar <input name="website" tabindex="-1" autocomplete="off"></label>
+            <p class="hint" id="coords-txt">Pulsa en el mapa para marcar el lugar (opcional).</p>
+            <div id="resultado" aria-live="polite"></div>
+            <div><button class="btn btn-primary" type="submit" id="enviar">Enviar aviso anónimo</button></div>
+          </form>
+
+          <aside>
+            <div id="mapa-ayuda" class="map md" role="application" aria-label="Mapa para marcar la ubicación"></div>
+            <div class="panel" id="estado" style="padding:20px;margin-top:20px">
+              <h2 style="text-transform:uppercase;font-size:24px;margin-bottom:8px">Consultar mi aviso</h2>
+              <p style="color:var(--muted);margin-top:0">Introduce el código que recibiste (por ejemplo, SF-7K2Q9M).</p>
+              <form class="tools" id="form-estado" style="padding:0;border:0">
+                <label class="visually-hidden" for="codigo">Código</label>
+                <input id="codigo" placeholder="SF-XXXXXX" maxlength="12" autocomplete="off" style="text-transform:uppercase">
+                <button class="btn" type="submit">Consultar</button>
+              </form>
+              <div id="estado-res" aria-live="polite" style="margin-top:12px"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="js/layout.js"></script>
+  <script type="module" src="js/ayuda.js"></script>
+</body>
+</html>

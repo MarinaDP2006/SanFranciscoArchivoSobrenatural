@@ -1,0 +1,99 @@
+/* Tema "archivo clasificado" de la aplicación de gestión */
+.root {
+    -fx-font-family: "Consolas", "DejaVu Sans Mono", "Monospaced";
+    -fx-font-size: 13px;
+    -fx-base: #141b1e;
+    -fx-background: #0b0f11;
+    -fx-control-inner-background: #0f1416;
+    -fx-control-inner-background-alt: #12191b;
+    -fx-accent: #e8b04b;
+    -fx-focus-color: #e8b04b;
+    -fx-faint-focus-color: rgba(232,176,75,.2);
+    -fx-text-base-color: #d9e4df;
+    -fx-text-background-color: #d9e4df;
+    -fx-selection-bar: #3a2f17;
+    -fx-selection-bar-non-focused: #2a2414;
+    -fx-background-color: #0b0f11;
+}
+.label { -fx-text-fill: #d9e4df; }
+.titulo { -fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #e9efe9; }
+.subtitulo { -fx-text-fill: #8a9a95; }
+.seccion { -fx-text-fill: #e8b04b; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 6 0 0 0; }
+.etiqueta { -fx-text-fill: #8a9a95; -fx-font-size: 12px; }
+.pantalla { -fx-background-color: #0b0f11; }
+
+/* --- Menú lateral --- */
+.sidebar { -fx-background-color: #070a0b; -fx-border-color: transparent #22302f transparent transparent; -fx-padding: 18 12 18 12; -fx-spacing: 3; }
+.marca { -fx-text-fill: #e8b04b; -fx-font-size: 17px; -fx-font-weight: bold; }
+.marca-sub { -fx-text-fill: #5d6d68; -fx-font-size: 10px; }
+.menu-grupo { -fx-text-fill: #5d6d68; -fx-font-size: 10px; -fx-padding: 14 8 4 8; }
+.button.menu-item { -fx-border-color: transparent; -fx-background-color: transparent; -fx-text-fill: #a9b8b3; -fx-alignment: center-left; -fx-padding: 8 12 8 12; -fx-background-radius: 4; -fx-cursor: hand; }
+.button.menu-item:hover { -fx-background-color: #12191b; -fx-text-fill: #ffffff; }
+.button.menu-item.activo { -fx-background-color: #1d1a12; -fx-text-fill: #e8b04b; -fx-border-color: transparent transparent transparent #e8b04b; -fx-border-width: 0 0 0 3; }
+.usuario-box { -fx-background-color: #0f1416; -fx-background-radius: 4; -fx-padding: 10; -fx-border-color: #22302f; -fx-border-radius: 4; }
+.usuario-nombre { -fx-font-weight: bold; }
+.usuario-rol { -fx-text-fill: #e8b04b; -fx-font-size: 10px; }
+
+/* --- Botones --- */
+.button { -fx-background-color: #141b1e; -fx-border-color: #33504a; -fx-border-radius: 4; -fx-background-radius: 4; -fx-text-fill: #d9e4df; -fx-padding: 7 14 7 14; -fx-cursor: hand; }
+.button:hover { -fx-border-color: #e8b04b; }
+.button.primario { -fx-background-color: #e8b04b; -fx-border-color: #e8b04b; -fx-text-fill: #000000; -fx-font-weight: bold; }
+.button.primario:hover { -fx-background-color: #f2c26a; }
+.button.peligro { -fx-background-color: #3a1414; -fx-border-color: #ff4d4d; -fx-text-fill: #ffb3b3; }
+.button:disabled { -fx-opacity: .45; }
+
+/* --- Campos --- */
+.text-field, .text-area, .combo-box, .date-picker, .spinner, .password-field { -fx-background-color: #0f1416; -fx-border-color: #33504a; -fx-border-radius: 4; -fx-background-radius: 4; }
+.text-area .content { -fx-background-color: #0f1416; }
+.text-field:focused, .text-area:focused, .combo-box:focused { -fx-border-color: #e8b04b; }
+.check-box { -fx-text-fill: #d9e4df; }
+
+/* --- Tablas --- */
+.table-view { -fx-background-color: #0f1416; -fx-border-color: #22302f; }
+.table-view .column-header-background { -fx-background-color: #12191b; }
+.table-view .column-header, .table-view .filler { -fx-background-color: #12191b; -fx-border-color: transparent #22302f #22302f transparent; }
+.table-view .column-header .label { -fx-text-fill: #8a9a95; -fx-font-size: 11px; -fx-font-weight: bold; }
+.table-row-cell { -fx-background-color: #0f1416; -fx-border-color: transparent transparent #1a2427 transparent; -fx-cell-size: 30; }
+.table-row-cell:odd { -fx-background-color: #11171a; }
+.table-row-cell:selected { -fx-background-color: #2b2412; }
+.table-cell { -fx-text-fill: #d9e4df; -fx-font-size: 12px; }
+.positivo { -fx-text-fill: #3ddc84; }
+.negativo { -fx-text-fill: #ff7b7b; }
+.list-view { -fx-background-color: #0f1416; -fx-border-color: #22302f; }
+.list-cell { -fx-background-color: #0f1416; -fx-text-fill: #d9e4df; -fx-padding: 8; }
+.list-cell:odd { -fx-background-color: #11171a; }
+.list-cell:selected { -fx-background-color: #2b2412; }
+.list-view.drop-ok { -fx-border-color: #e8b04b; -fx-border-width: 2; }
+
+/* --- Paneles --- */
+.panel { -fx-background-color: #0f1416; -fx-border-color: #22302f; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 14; }
+.split-pane { -fx-background-color: transparent; -fx-padding: 0; }
+.split-pane > .split-pane-divider { -fx-background-color: #22302f; -fx-padding: 0 1 0 1; }
+.tab-pane .tab { -fx-background-color: #12191b; }
+.tab-pane .tab:selected { -fx-background-color: #1d1a12; }
+.tab-pane .tab .tab-label { -fx-text-fill: #d9e4df; }
+.scroll-pane, .scroll-pane > .viewport { -fx-background-color: transparent; }
+
+/* --- KPIs --- */
+.kpi { -fx-background-color: #0f1416; -fx-border-color: #22302f; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 12 16 12 16; }
+.kpi-valor { -fx-font-size: 21px; -fx-font-weight: bold; }
+.kpi-etiqueta { -fx-text-fill: #8a9a95; -fx-font-size: 10px; }
+.k-ambar { -fx-text-fill: #f5a524; } .k-rojo { -fx-text-fill: #ff4d4d; } .k-turquesa { -fx-text-fill: #4fd1c5; }
+.k-verde { -fx-text-fill: #3ddc84; } .k-oro { -fx-text-fill: #e8b04b; } .k-blanco { -fx-text-fill: #e9efe9; }
+
+/* --- Badges --- */
+.badge { -fx-padding: 1 7 1 7; -fx-border-radius: 2; -fx-background-radius: 2; -fx-font-size: 10px; -fx-font-weight: bold; -fx-border-color: #8a9a95; -fx-text-fill: #8a9a95; }
+.badge-secuestro, .badge-asignado, .badge-media, .badge-en_mision, .badge-en_revision, .badge-secreto { -fx-border-color: #f5a524; -fx-text-fill: #f5a524; }
+.badge-asesinato, .badge-inactivo, .badge-en_riesgo, .badge-critica, .badge-fallido, .badge-herido, .badge-omega, .badge-penalizacion, .badge-pendiente, .badge-no_verificado { -fx-border-color: #ff4d4d; -fx-text-fill: #ff7b7b; }
+.badge-desaparicion, .badge-en_curso, .badge-en_investigacion, .badge-transporte { -fx-border-color: #4fd1c5; -fx-text-fill: #4fd1c5; }
+.badge-completado, .badge-activo, .badge-potencial, .badge-resuelto, .badge-disponible, .badge-atendida, .badge-recompensa, .badge-bonus, .badge-verificado, .badge-publicado { -fx-border-color: #3ddc84; -fx-text-fill: #3ddc84; }
+.badge-solicitado, .badge-admin, .badge-borrador, .badge-alta, .badge-pendiente_revision, .badge-alto_secreto { -fx-border-color: #e8b04b; -fx-text-fill: #e8b04b; }
+
+/* --- Login --- */
+.login-fondo { -fx-background-color: radial-gradient(center 80% 0%, radius 70%, #2a2010, #07090a); }
+.login-caja { -fx-background-color: #0f1416; -fx-border-color: #33504a; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 34; -fx-spacing: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,.6), 30, 0, 0, 10); }
+.sello { -fx-border-color: #e8b04b; -fx-border-width: 2; -fx-text-fill: #e8b04b; -fx-font-size: 20px; -fx-font-weight: bold; -fx-padding: 6 12 6 12; -fx-rotate: -4; }
+.error-login { -fx-text-fill: #ff7b7b; }
+.aviso { -fx-background-color: #1d1a12; -fx-border-color: #e8b04b; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 10; }
+.dialog-pane { -fx-background-color: #0f1416; }
+.dialog-pane .content.label { -fx-text-fill: #d9e4df; }

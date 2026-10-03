@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Oswald:wght@500;600&display=swap">
+  <title>Noticias · San Francisco Archive</title>
+  <meta name="description" content="Noticias, avisos y crónicas del San Francisco Archive.">
+  <link rel="stylesheet" href="css/archivo.css">
+</head>
+<body data-page="noticias">
+  <main id="contenido">
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Sala de prensa</p>
+            <h1 style="font-size:clamp(34px,5vw,56px);text-transform:uppercase">Noticias</h1>
+            <p>Sucesos, avisos de seguridad y crónicas de la ciudad publicadas por el equipo del Archivo.</p>
+          </div>
+        </div>
+        <div class="filters" id="cats" role="group" aria-label="Filtrar por categoría"></div>
+        <div class="news-grid" id="lista" aria-live="polite"><p class="empty">Cargando noticias…</p></div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="js/layout.js"></script>
+  <script type="module">
+    import { api } from "./js/api.js";
+    import { CATEGORIAS, el, tarjetaNoticia } from "./js/ui.js";
+
+    const lista = document.getElementById("lista");
+    const cats = document.getElementById("cats");
+    let actual = new URLSearchParams(location.search).get("categoria") || "";
+
+    function chips() {
+      cats.replaceChildren(...[["", "Todas"], ...Object.entries(CATEGORIAS)].map(([k, v]) =>
+        el("button", { class: "chip", type: "button", "aria-pressed": String(k === actual), text: v,
+          onclick: () => { actual = k; history.replaceState(null, "", k ? "?categoria=" + k : "noticias.html"); chips(); cargar(); } })));
+    }
+
+    async function cargar() {
+      lista.replaceChildren(el("p", { class: "empty", text: "Cargando noticias…" }));
+      try {
+        const ns = await api.noticias(actual, 50);
+        lista.replaceChildren(...(ns.length ? ns.map((n) => tarjetaNoticia(n, n.destacada && !actual))
+          : [el("p", { class: "empty", text: "No hay noticias en esta categoría." })]));
+      } catch {
+        lista.replaceChildren(el("p", { class: "empty", text: "No se pudieron cargar las noticias." }));
+      }
+    }
+    chips();
+    cargar();
+  </script>
+</body>
+</html>

@@ -1,27 +1,38 @@
-# San Francisco Archive
+# Web pública · San Francisco Archive
 
-Sitio web estático para consultar un archivo público de incidentes y verlos en un mapa.
+Portal **solo informativo**. Los ciudadanos no inician sesión: consultan el feed y el mapa, leen noticias y pueden **pedir ayuda de forma anónima**. Todos los datos los gestiona la aplicación de escritorio (`../archive-app`), que escribe en MySQL; esta web los lee a través de la API.
 
-## Ejecutar localmente
+## Páginas
 
-Sirve la carpeta `public` con cualquier servidor estático. Por ejemplo:
+| Archivo | Contenido |
+| --- | --- |
+| `index.html` | Portada: estadísticas, feed en vivo + mapa (auto-refresco 30 s), últimas noticias |
+| `incidente.html?id=` | Expediente público de un incidente con mini-mapa |
+| `noticias.html` · `noticia.html?slug=` | Sala de prensa |
+| `ayuda.html` | Formulario anónimo «Pedir ayuda» y consulta del estado con el código |
+| `archivo.html` | Quiénes somos, cómo trabajamos, FAQ |
 
-```powershell
-python -m http.server 8000 --directory public
+## Ejecutar
+
+La forma más sencilla es arrancar la API, que sirve también esta carpeta:
+
+```bash
+cd ../archive-app && java -jar api-web/target/sfa-api.jar   # → http://localhost:8080
 ```
 
-Abre `http://localhost:8000`. El feed y el mapa usan `public/data/mock-incidents.json` mientras no se configure una API.
+Para servirla por separado (la web detecta la API en `localhost:8080`):
 
-## Publicar en GitHub Pages
+```bash
+python -m http.server 5500 --directory public      # → http://localhost:5500
+# o: node scripts/serve.mjs 5500
+```
 
-1. Sube este proyecto a un repositorio de GitHub.
-2. En **Settings > Pages**, selecciona **GitHub Actions** como fuente de publicación.
-3. Sube los cambios a la rama `main` o `master`, o ejecuta manualmente el workflow **Deploy GitHub Pages** en **Actions**.
+No abras los HTML con `file://`: los módulos JavaScript necesitan un servidor.
 
-El workflow publica la carpeta `public`. GitHub mostrará la URL en **Settings > Pages** y en el resultado del workflow.
+## Configuración
 
-## API y acceso reporter
+`public/js/config.js` → `API_PRODUCCION` con la URL pública de la API al desplegar (Netlify / Cloudflare Pages). Sin API disponible la web muestra `public/data/demo.json` con un aviso de «modo demostración».
 
-El sitio público funciona sin servidor usando los datos de demostración. Para conectar una API, configura `API_BASE` en `public/js/config.js` con la URL HTTPS de la API y el prefijo `/api`; el servidor debe permitir CORS desde el dominio publicado. La API debe implementar los endpoints consumidos en `public/js/api.js`.
+## Tecnología
 
-GitHub Pages solo sirve archivos estáticos. El inicio de sesión, las sesiones y la creación de contratos requieren una API desplegada por separado; no se simulan en el navegador ni se almacenan allí como si fueran seguros.
+HTML + CSS + JavaScript nativo (módulos ES), sin compilación. Leaflet 1.9.4 incluido en `public/vendor/leaflet` (licencia BSD-2) y mapa base CARTO Dark Matter. Todo el contenido de la API se inserta como texto (sin `innerHTML`) para evitar XSS.

@@ -1,0 +1,17 @@
+# MySQL 8 listo para el San Francisco Archive (opcional: también vale XAMPP/MySQL instalado).
+#   docker compose up -d
+# Crea la base de datos sf_archive con los scripts de /database en el primer arranque.
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: sfa-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: America/Los_Angeles
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d:ro
+      - sfa-datos:/var/lib/mysql
+volumes:
+  sfa-datos:
