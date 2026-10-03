@@ -96,8 +96,8 @@ Los ciudadanos **no tienen cuenta**. Solo existen estas 13:
 
 | Usuario | Nombre | Rol | Contraseña inicial |
 | --- | --- | --- | --- |
-| `james` | James Whitaker | Administrador (Director) | `Archivo1906!` |
-| `sarah` | Sarah Whitaker | Administradora (Operaciones) | `Archivo1906!` |
+| `james` | James Pratt | Administrador (Director) | `Archivo1906!` |
+| `sarah` | Sarah Summers | Administradora (Operaciones) | `Archivo1906!` |
 | `nina` | Nina | Administradora (Sistema y archivista) | `Archivo1906!` |
 | `niebla` | Elena Vargas · Tránsito por la niebla | Potencial (Unidad Mission) | `Potencial2026!` |
 | `faro` | Marcus Lee · Lectura de rastros | Potencial (Unidad Chinatown) | `Potencial2026!` |
