@@ -1,21 +1,17 @@
 -- =====================================================================
 --  SAN FRANCISCO ARCHIVE · Sistema de Gestión de Anomalías
---  Esquema MySQL 8 (compatible también con MariaDB 10.6+)
---
 --  Capa pública  → la web solo LEE (vistas v_*) y crea solicitudes de ayuda.
 --  Capa privada  → la aplicación de escritorio (JavaFX) gestiona todo.
---
 --  Ejecutar:  mysql -u root -p < database/01_schema.sql
 --             mysql -u root -p < database/02_datos.sql
 -- =====================================================================
 
 DROP DATABASE IF EXISTS sf_archive;
-CREATE DATABASE sf_archive CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE sf_archive;
 USE sf_archive;
 
 -- ---------------------------------------------------------------------
--- 1. USUARIOS: solo pueden iniciar sesión los 3 administradores y los
---    potenciales. Los ciudadanos NUNCA se registran.
+-- 1. USUARIOS: solo pueden iniciar sesión los 3 administradores y los potenciales. Los ciudadanos NUNCA se registran.
 -- ---------------------------------------------------------------------
 CREATE TABLE usuarios (
     id              INT AUTO_INCREMENT PRIMARY KEY,
@@ -319,8 +315,7 @@ LEFT JOIN usuarios u ON u.id = n.autor_id
 WHERE n.publicada = 1 AND n.fecha_publicacion <= NOW();
 
 -- =====================================================================
--- USUARIO DE BASE DE DATOS para la API pública (solo lectura + ayuda)
--- y para la aplicación de gestión. Cambia las contraseñas en producción.
+-- USUARIO DE BASE DE DATOS para la API pública (solo lectura + ayuda) y para la aplicación de gestión. Cambia las contraseñas en producción.
 -- =====================================================================
 CREATE USER IF NOT EXISTS 'sfa_web'@'%'   IDENTIFIED BY 'sfa_web_2026';
 CREATE USER IF NOT EXISTS 'sfa_admin'@'%' IDENTIFIED BY 'sfa_admin_2026';
