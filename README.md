@@ -2,7 +2,9 @@
 
 > TFG · Información, localización y resolución de incidentes (normales y sobrenaturales) en San Francisco, California.
 
-El Archivo es una organización privada dirigida desde San Francisco por **James Whitaker** (62 años, 190 de experiencia sobrenatural) y **Sarah Whitaker** (53 años, 35 de experiencia), matrimonio, con **Nina** como administradora del sistema. Gestionan una red de **10 Potenciales** que resuelven incidentes que para el público son noticias normales: **secuestros, asesinatos y desapariciones**. Detrás de cada uno hay una anomalía que solo se resuelve con un **Contrato**.
+El Archivo es una organización privada dirigida desde San Francisco por **James Pratt** (62 años, 190 de experiencia sobrenatural) y **Sarah Pratt** (53 años, 35 de experiencia), matrimonio, con **Nina** como administradora del sistema. Gestionan una red de **10 Potenciales** que resuelven incidentes que para el público son noticias normales: **secuestros, asesinatos y desapariciones**. Detrás de cada uno hay una anomalía que solo se resuelve con un **Contrato**.
+
+> Los Pratt están inspirados en Buffy y Spike (William «the Bloody» Pratt): él, un vampiro con más siglos de experiencia que años aparentes; ella, la que manda en el terreno.
 
 El sistema está dividido en **dos capas**:
 
@@ -94,8 +96,8 @@ Los ciudadanos **no tienen cuenta**. Solo existen estas 13:
 
 | Usuario | Nombre | Rol | Contraseña inicial |
 | --- | --- | --- | --- |
-| `james` | James Whitaker | Administrador (Director) | `Archivo1906!` |
-| `sarah` | Sarah Whitaker | Administradora (Operaciones) | `Archivo1906!` |
+| `james` | James Pratt | Administrador (Director) | `Archivo1906!` |
+| `sarah` | Sarah Pratt | Administradora (Operaciones) | `Archivo1906!` |
 | `nina` | Nina | Administradora (Sistema y archivista) | `Archivo1906!` |
 | `niebla` | Elena Vargas · Tránsito por la niebla | Potencial (Unidad Mission) | `Potencial2026!` |
 | `faro` | Marcus Lee · Lectura de rastros | Potencial (Unidad Chinatown) | `Potencial2026!` |

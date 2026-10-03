@@ -331,7 +331,7 @@
    "incidenteId": 4,
    "destacada": true,
    "fecha": "2026-09-14T08:00:00",
-   "autor": "James Whitaker"
+   "autor": "James Pratt"
   },
   {
    "id": 3,
@@ -345,7 +345,7 @@
    "incidenteId": 3,
    "destacada": false,
    "fecha": "2026-09-07T12:00:00",
-   "autor": "Sarah Whitaker"
+   "autor": "Sarah Pratt"
   },
   {
    "id": 5,
@@ -373,7 +373,7 @@
    "incidenteId": 2,
    "destacada": false,
    "fecha": "2026-08-27T10:30:00",
-   "autor": "Sarah Whitaker"
+   "autor": "Sarah Pratt"
   },
   {
    "id": 1,
@@ -401,7 +401,7 @@
    "incidenteId": null,
    "destacada": false,
    "fecha": "2026-04-18T05:12:00",
-   "autor": "James Whitaker"
+   "autor": "James Pratt"
   }
  ],
  "zonas": [

@@ -13,8 +13,8 @@ SET NAMES utf8mb4;
 -- USUARIOS (3 administradores + 10 potenciales)
 -- ---------------------------------------------------------------------
 INSERT INTO usuarios (id, username, email, password_hash, rol, nombre_completo, ultimo_acceso) VALUES
-(1,  'james',   'james@sfarchive.org',   'pbkdf2_sha256$65536$N7rTbco/utkwbIzRCO9L6w==$Gj1+qP27pq/1jf7Tru35NriQL0JNWsDVqa5wFAKNH18=', 'ADMIN', 'James Whitaker', '2026-10-03 08:12:00'),
-(2,  'sarah',   'sarah@sfarchive.org',   'pbkdf2_sha256$65536$N7rTbco/utkwbIzRCO9L6w==$Gj1+qP27pq/1jf7Tru35NriQL0JNWsDVqa5wFAKNH18=', 'ADMIN', 'Sarah Whitaker', '2026-10-02 22:47:00'),
+(1,  'james',   'james@sfarchive.org',   'pbkdf2_sha256$65536$N7rTbco/utkwbIzRCO9L6w==$Gj1+qP27pq/1jf7Tru35NriQL0JNWsDVqa5wFAKNH18=', 'ADMIN', 'James Pratt', '2026-10-03 08:12:00'),
+(2,  'sarah',   'sarah@sfarchive.org',   'pbkdf2_sha256$65536$N7rTbco/utkwbIzRCO9L6w==$Gj1+qP27pq/1jf7Tru35NriQL0JNWsDVqa5wFAKNH18=', 'ADMIN', 'Sarah Pratt', '2026-10-02 22:47:00'),
 (3,  'nina',    'nina@sfarchive.org',    'pbkdf2_sha256$65536$N7rTbco/utkwbIzRCO9L6w==$Gj1+qP27pq/1jf7Tru35NriQL0JNWsDVqa5wFAKNH18=', 'ADMIN', 'Nina',           '2026-10-03 09:30:00'),
 (4,  'niebla',  'elena.vargas@sfarchive.org',  'pbkdf2_sha256$65536$A4tYxRQE/1Ep2qH+JvGLpg==$INRN04O7sr2U4eQ2t7///2e8nUyxharyiDp7k5Q/FWU=', 'POTENCIAL', 'Elena Vargas',  NULL),
 (5,  'faro',    'marcus.lee@sfarchive.org',    'pbkdf2_sha256$65536$A4tYxRQE/1Ep2qH+JvGLpg==$INRN04O7sr2U4eQ2t7///2e8nUyxharyiDp7k5Q/FWU=', 'POTENCIAL', 'Marcus Lee',    NULL),
