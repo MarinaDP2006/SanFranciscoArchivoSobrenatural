@@ -22,6 +22,8 @@ El sistema está dividido en **dos capas**:
 
 Todo lo que se publica desde la app (incidentes, noticias, zonas seguras, cierres de casos) aparece en la web en el siguiente refresco automático (30 s). Los avisos que envían los ciudadanos desde la web llegan a la app en «Avisos ciudadanos».
 
+> 📘 **¿Empiezas con el proyecto?** Lee el [TUTORIAL.md](TUTORIAL.md): explica paso a paso cómo arrancarlo, cómo está hecho (Java, JDBC, JavaFX, FXML/Scene Builder, API y web) y cómo modificarlo.
+
 ## Estructura del repositorio
 
 ```
