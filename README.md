@@ -2,7 +2,7 @@
 
 > TFG · Información, localización y resolución de incidentes (normales y sobrenaturales) en San Francisco, California.
 
-El Archivo es una organización privada dirigida desde San Francisco por **James Whitaker** (62 años, 190 de experiencia sobrenatural) y **Sarah Whitaker** (53 años, 35 de experiencia), matrimonio, con **Nina** como administradora del sistema. Gestionan una red de **10 Potenciales** que resuelven incidentes que para el público son noticias normales: **secuestros, asesinatos y desapariciones**. Detrás de cada uno hay una anomalía que solo se resuelve con un **Contrato**.
+El Archivo es una organización privada dirigida desde San Francisco por **James Pratt** (62 años, 190 de experiencia sobrenatural) y **Sarah Summers** (53 años, 35 de experiencia), matrimonio, con **Nina** como administradora del sistema. Gestionan una red de **10 Potenciales** que resuelven incidentes que para el público son noticias normales: **secuestros, asesinatos y desapariciones**. Detrás de cada uno hay una anomalía que solo se resuelve con un **Contrato**.
 
 El sistema está dividido en **dos capas**:
 
