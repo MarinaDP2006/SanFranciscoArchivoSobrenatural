@@ -1,11 +1,8 @@
-# Tutorial · Cómo funciona el San Francisco Archive (y cómo tocarlo sin miedo)
-
-Guía para entender el proyecto desde cero.
+# Tutorial · Cómo funciona San Francisco Archive
 
 > Consejo: ten abierto el proyecto en el IDE mientras lees. Cada vez que aparezca una ruta como `core/.../ContratoService.java`, ábrela y busca lo que se explica.
 
 ## 1. La idea en un minuto
-
 Hay **dos mundos** que comparten **una base de datos**:
 ```
   App de escritorio (JavaFX)          MySQL               API (Java)            Web (HTML/JS)
@@ -16,13 +13,11 @@ Hay **dos mundos** que comparten **una base de datos**:
 - **La app** es "la oficina secreta": aquí James, Sarah, yo y los potenciales gestionáis incidentes, contratos, monederos…
 - **La web** es "el periódico": solo enseña lo que la app marca como **publicado**.
 - La **API** es el "mensajero" entre MySQL y la web (la web no puede hablar directamente con MySQL.
-
 Ejemplo real: en la app marcas un incidente como *Publicado en la web* → se guarda `publicado = 1` en MySQL → la web, que pregunta a la API cada 30 segundos, lo recibe y lo pinta en el mapa. Nadie "sube" nada a mano.
 
 ---
 
 ## 2. Preparar el ordenador
-
 ### 2.1 Lista de lo que necesitas
 
 | # | Herramienta | ¿Obligatoria? | Para qué |
