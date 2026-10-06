@@ -4,23 +4,6 @@ Guía para entender el proyecto desde cero.
 
 > Consejo: ten abierto el proyecto en el IDE mientras lees. Cada vez que aparezca una ruta como `core/.../ContratoService.java`, ábrela y busca lo que se explica.
 
-## Índice
-1. [La idea en un minuto]
-2. [Preparar el ordenador: qué instalar y cómo]
-3. [Arrancar todo paso a paso]
-4. [Mapa de carpetas y clase por clase]
-5. [Repaso de Java que usa el proyecto]
-6. [La base de datos]
-7. [Hablar con MySQL desde Java (JDBC)]
-8. [Las capas: modelo → DAO → servicio → pantalla]
-9. [JavaFX: cómo están hechas las pantallas]
-10. [JavaFX con FXML y Scene Builder]
-11. [La API y la web: cómo la app actualiza la web]
-12. [Recetas: cambios típicos paso a paso]
-13. [Errores frecuentes y soluciones]
-14. [Glosario]
----
-
 ## 1. La idea en un minuto
 
 Hay **dos mundos** que comparten **una base de datos**:
