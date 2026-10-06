@@ -35,4 +35,4 @@ No abras los HTML con `file://`: los módulos JavaScript necesitan un servidor.
 
 ## Tecnología
 
-HTML + CSS + JavaScript nativo (módulos ES), sin compilación. Leaflet 1.9.4 incluido en `public/vendor/leaflet` (licencia BSD-2) y mapa base CARTO Dark Matter. Todo el contenido de la API se inserta como texto (sin `innerHTML`) para evitar XSS.
+HTML + CSS + JavaScript nativo (módulos ES), sin compilación. Leaflet 1.9.4 incluido en `public/vendor/leaflet` (licencia BSD-2) y mapa base OpenStreetMap. Todo el contenido de la API se inserta como texto (sin `innerHTML`) para evitar XSS.

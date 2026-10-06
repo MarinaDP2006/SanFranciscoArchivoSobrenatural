@@ -1,15 +1,15 @@
 package com.sfarchive.core.dao;
 
-import com.sfarchive.core.db.Jdbc;
-import com.sfarchive.core.model.Rol;
-import com.sfarchive.core.model.Usuario;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import com.sfarchive.core.db.Jdbc;
+import com.sfarchive.core.model.Rol;
+import com.sfarchive.core.model.Usuario;
 
 /**
  * Acceso a la tabla {@code usuarios} (cuentas de la app).
@@ -50,14 +50,15 @@ public class UsuarioDao {
         return Jdbc.one(SELECT + " WHERE u.id = ?", UsuarioDao::map, id);
     }
 
-    /** Busca una cuenta por su nombre de usuario (para el login). */
+    /** Busca una cuenta por su nombre de usuario o correo (para el login). */
     public Optional<Usuario> porUsername(String username) {
-        return Jdbc.one(SELECT + " WHERE u.username = ?", UsuarioDao::map, username);
+        return Jdbc.one(SELECT + " WHERE u.username = ? OR u.email = ?", UsuarioDao::map, username, username);
     }
 
     /** Devuelve el hash de la contraseña de un usuario (para comprobarla en el login). */
     public Optional<String> hashDe(String username) {
-        return Jdbc.one("SELECT password_hash FROM usuarios WHERE username = ?", rs -> rs.getString(1), username);
+        return Jdbc.one("SELECT password_hash FROM usuarios WHERE username = ? OR email = ?",
+                rs -> rs.getString(1), username, username);
     }
 
     /** Devuelve el hash de la contraseña por id (para cambiar la contraseña). */

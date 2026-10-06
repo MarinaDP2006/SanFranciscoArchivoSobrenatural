@@ -1,4 +1,4 @@
-// Mapa oscuro (Leaflet + CARTO Dark Matter) centrado en San Francisco.
+// Mapa de OpenStreetMap centrado en San Francisco.
 import { CONFIG } from "./config.js";
 import { TIPOS, ZONAS, el, etiquetaTipo, fecha } from "./ui.js";
 
@@ -10,7 +10,10 @@ export function crearMapa(id, opciones = {}) {
   const mapa = L.map(id, { zoomControl: false, minZoom: 3, worldCopyJump: true })
     .setView(opciones.centro ?? CONFIG.MAPA_CENTRO, opciones.zoom ?? CONFIG.MAPA_ZOOM);
   L.control.zoom({ position: "bottomright" }).addTo(mapa);
-  L.tileLayer(CONFIG.TILES, { subdomains: "abcd", maxZoom: 19, attribution: CONFIG.TILES_ATRIBUCION }).addTo(mapa);
+  const osm = L.tileLayer(CONFIG.TILES_OSM, {
+    maxZoom: 19, attribution: CONFIG.TILES_OSM_ATRIBUCION,
+  });
+  osm.addTo(mapa);
 
   const capaIncidentes = L.layerGroup().addTo(mapa);
   const capaZonas = L.layerGroup().addTo(mapa);

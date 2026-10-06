@@ -13,5 +13,25 @@ services:
     volumes:
       - ./database:/docker-entrypoint-initdb.d:ro
       - sfa-datos:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  api:
+    build:
+      context: .
+      dockerfile: archive-app/api-web/Dockerfile
+    container_name: sfa-api
+    environment:
+      PORT: 8080
+      SFA_DB_URL: jdbc:mysql://mysql:3306/sf_archive?useUnicode=true&characterEncoding=UTF-8
+      SFA_DB_USER: sfa_web
+      SFA_DB_PASSWORD: sfa_web_2026
+    ports:
+      - "${SFA_API_PORT:-8080}:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
 volumes:
   sfa-datos:

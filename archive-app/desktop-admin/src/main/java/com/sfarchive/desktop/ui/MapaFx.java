@@ -1,13 +1,13 @@
 package com.sfarchive.desktop.ui;
 
-import javafx.scene.layout.StackPane;
-import javafx.scene.web.WebView;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
+
+import javafx.scene.layout.StackPane;
+import javafx.scene.web.WebView;
 
 /**
  * Mapa oscuro de Leaflet dentro de la aplicación JavaFX.
@@ -64,8 +64,8 @@ public class MapaFx extends StackPane {
                 .leaflet-control-attribution{background:rgba(0,0,0,.6)!important;color:#5d6d68!important}
                 </style><script>%s</script></head><body><div id="m"></div><script>
                 var m=L.map('m',{zoomControl:true}).setView([%s,%s],%d);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                  {subdomains:'abcd',maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(m);
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    {maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(m);
                 var pins=%s;
                 pins.forEach(function(p){
                   var esc=function(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;};

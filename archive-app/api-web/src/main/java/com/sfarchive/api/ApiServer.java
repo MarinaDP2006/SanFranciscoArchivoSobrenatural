@@ -92,6 +92,12 @@ public final class ApiServer {
                     s.location = Location.EXTERNAL;
                     s.hostedPath = "/";
                 });
+            } else {
+                config.staticFiles.add(s -> {
+                    s.directory = "/public";
+                    s.location = Location.CLASSPATH;
+                    s.hostedPath = "/";
+                });
             }
         });
 

@@ -1,11 +1,12 @@
 package com.sfarchive.core.security;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 /**
  * Cifrado (hash) de contraseñas con PBKDF2-HMAC-SHA256, incluido en el JDK.
@@ -72,11 +73,14 @@ public final class PasswordHasher {
     }
 
     /**
-     * Política mínima de contraseñas: al menos 8 caracteres, con letras y números.
+     * Acepta claves demo de seis dígitos o contraseñas alfanuméricas de al menos 8 caracteres.
      * @return el mensaje de error, o null si la contraseña es válida
      */
     public static String validarFortaleza(String pwd) {
-        if (pwd == null || pwd.length() < 8) return "La contraseña debe tener al menos 8 caracteres.";
+        if (pwd == null) return "La contraseña no puede estar vacía.";
+        if (pwd.matches("\\d{6}")) return null;
+        if (pwd.matches("\\d+")) return "La clave numérica debe tener exactamente 6 dígitos.";
+        if (pwd.length() < 8) return "La contraseña debe tener al menos 8 caracteres o ser de 6 dígitos.";
         if (!pwd.matches(".*[A-Za-z].*") || !pwd.matches(".*\\d.*"))
             return "La contraseña debe combinar letras y números.";
         return null;

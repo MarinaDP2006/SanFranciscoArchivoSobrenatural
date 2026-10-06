@@ -43,7 +43,7 @@ docker-compose.yml         MySQL 8 con los scripts cargados automáticamente (op
 
 ## Puesta en marcha (local)
 
-Requisitos: **Java 21**, **Maven 3.9+**, **MySQL 8** (o MariaDB 10.6+, XAMPP vale) y un navegador.
+Requisitos: **Java 21**, **Maven 3.9+**, **MySQL Server 8** (o MariaDB 10.6+) y MySQL Workbench para administrar la base gráficamente.
 
 ### 1. Base de datos
 
@@ -52,7 +52,11 @@ mysql -u root -p < database/01_schema.sql
 mysql -u root -p < database/02_datos.sql
 ```
 
-O con Docker: `docker compose up -d` (carga ambos scripts automáticamente).
+O con Docker: `docker compose up -d` (carga los scripts de `database/` en orden).
+
+**En este PC el servidor ya está instalado**: existe el servicio `MySQL80`, pero está detenido. No instales otro servidor encima. Abre `services.msc`, busca `MySQL80` y pulsa **Iniciar** (o abre PowerShell como administrador y ejecuta `Start-Service MySQL80`). Instala [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) si no lo tienes; sirve para conectarte a `localhost:3306` y ejecutar los SQL. Si el instalador de la captura es lo único que descargaste, el paquete completo se llama `mysql-installer-community`; el paquete `mysql-installer-web-community` es solo un instalador pequeño que descarga componentes durante la instalación.
+
+Para una base nueva, en Workbench ejecuta `database/01_schema.sql` y después `database/02_datos.sql`. Si `sf_archive` ya tiene datos, ejecuta solamente el bloque **CUENTAS DE ACCESO FINALES** del final de `database/02_datos.sql`; no ejecutes `01_schema.sql`, porque elimina y crea de nuevo la base. La aplicación conecta con `sfa_admin` / `sfa_admin_2026`; el usuario de la API es `sfa_web` / `sfa_web_2026`.
 
 Se crean dos usuarios MySQL con permisos mínimos:
 
@@ -72,50 +76,52 @@ mvn clean package
 
 ### 3. Arrancar la API + la web
 
+La API sirve también la web en el mismo origen; la URL de `/api` se resuelve automáticamente y no requiere configurar un dominio en `config.js`:
+
 ```bash
 cd archive-app
+mvn -pl api-web -am package
 java -jar api-web/target/sfa-api.jar
 ```
 
-Abre **http://localhost:8080** → la API sirve también la web (`archive-web/public`).
-Si prefieres servir la web aparte: `python -m http.server 5500 --directory archive-web/public` y abre http://localhost:5500 (detecta la API en el puerto 8080).
+Deja esta terminal abierta: la API y la web están sirviéndose juntas. Abre **http://localhost:8080** y comprueba **http://localhost:8080/api/salud**; debe decir `"baseDatos":"CONECTADA"`.
+Para ejecutar la API y la base de datos en contenedores, desde la raíz del repositorio:
+
+```bash
+docker compose up --build -d
+```
+
+Abre **http://localhost:8080**. En un servidor público, despliega esta misma imagen/Compose y publica el puerto 8080 detrás de HTTPS. La API y la web comparten origen, y la web cae automáticamente a los datos de demostración si la API no está disponible.
 
 ### 4. Arrancar la aplicación de gestión
 
+Abre una **segunda terminal** para mantener API/web y escritorio funcionando a la vez. Primero compila el proyecto desde la raíz si aún no lo hiciste:
+
 ```bash
 cd archive-app
-mvn -pl desktop-admin javafx:run
-# o bien:  java -jar desktop-admin/target/sfa-gestion.jar
+mvn -pl core -am install -DskipTests
+mvn -f desktop-admin/pom.xml org.openjfx:javafx-maven-plugin:0.0.8:run
 ```
 
 Para cambiar la conexión sin recompilar copia `archive-app/archive.properties.example` como `archive.properties`.
 
 ## Cuentas de acceso a la app
 
-Los ciudadanos **no tienen cuenta**. Solo existen estas 13:
+Los ciudadanos **no tienen cuenta**. Solo existen estas 4 cuentas de acceso:
 
-| Usuario | Nombre | Rol | Contraseña inicial |
-| --- | --- | --- | --- |
-| `james` | James Pratt | Administrador (Director) | `Archivo1906!` |
-| `sarah` | Sarah Summers | Administradora (Operaciones) | `Archivo1906!` |
-| `nina` | Nina | Administradora (Sistema y archivista) | `Archivo1906!` |
-| `niebla` | Elena Vargas · Tránsito por la niebla | Potencial (Unidad Mission) | `Potencial2026!` |
-| `faro` | Marcus Lee · Lectura de rastros | Potencial (Unidad Chinatown) | `Potencial2026!` |
-| `cable` | Danny O'Connor · Tecnopatía eléctrica | Potencial (Unidad Chinatown) | `Potencial2026!` |
-| `marea` | Isabel Reyes · Hidroquinesis | Potencial (Unidad Golden Gate) | `Potencial2026!` |
-| `eco` | Theo Brooks · Psicometría auditiva | Potencial (Unidad Golden Gate) | `Potencial2026!` |
-| `ceniza` | Grace Kim · Pirocinesis | Potencial (Unidad Golden Gate) | `Potencial2026!` |
-| `sombra` | Luis Navarro · Ocultación en sombras | Potencial (Unidad Chinatown) | `Potencial2026!` |
-| `brujula` | Amara Okafor · Localización de personas | Potencial (Unidad Bahía Este) | `Potencial2026!` |
-| `ancla` | Samuel Park · Sellado de entidades | Potencial (Unidad Bahía Este) | `Potencial2026!` |
-| `roca` | Rosa Delgado · Inmunidad a la posesión | Potencial (sin grupo) | `Potencial2026!` |
+| Usuario | Nombre | Rol | Estado | Contraseña |
+| --- | --- | --- | --- | --- |
+| `james` | James Pratt | Administrador (Director) | Activa | `240101` |
+| `sarah` | Sarah Summers | Administradora (Operaciones) | Activa | `240102` |
+| `nina` | Nina | Administradora (Sistema y archivista) | Activa | `240103` |
+| `niebla` | Elena Vargas · Tránsito por la niebla | Potencial (Unidad Mission) | Activa | `240104` |
 
-Cada usuario puede cambiar su contraseña en **Mi perfil**; los administradores pueden restablecerlas en **Usuarios y actividad**. Las contraseñas se guardan con **PBKDF2-HMAC-SHA256** (65 536 iteraciones y sal aleatoria).
+El login acepta el nombre de usuario o el correo. Las otras fichas de potencial se conservan, pero sus cuentas de acceso se eliminan. Estas claves numéricas de seis dígitos son solo para demostración local; cámbialas antes de cualquier despliegue público. Solo se guardan sus hashes **PBKDF2-HMAC-SHA256** (65 536 iteraciones y sal aleatoria), nunca las claves en texto plano.
 
 ## Qué hace cada parte
 
 ### Web pública (`archive-web/`) — solo consulta, sin login
-- **Inicio**: feed mundial de incidentes publicados (búsqueda y filtro por tipo) + **mapa oscuro** de San Francisco (Leaflet + CARTO Dark Matter) con pins por tipo y **zonas seguras en verde**. Auto-refresco cada 30 s.
+- **Inicio**: feed mundial de incidentes publicados (búsqueda y filtro por tipo) + mapa de San Francisco (Leaflet + OpenStreetMap) con pins por tipo y **zonas seguras en verde**. Auto-refresco cada 30 s.
 - **Expediente** de cada incidente con mini-mapa y noticias relacionadas (la anomalía aparece tachada).
 - **Noticias** con filtro por categoría y página de detalle.
 - **Pedir ayuda**: formulario **anónimo** (tipo, descripción, barrio, punto en el mapa, contacto opcional) → devuelve un **código de seguimiento** (`SF-XXXXXX`) para consultar el estado. Anti-spam: campo trampa y límite de 5 avisos/10 min por IP.
@@ -173,25 +179,26 @@ mvn test -Dsfa.it=true -Dtest=FlujoContratoIT,CoreTest -Dsurefire.failIfNoSpecif
 
 ## Generar el .exe de la aplicación
 
-No hace falta Electron: JavaFX se empaqueta con **jpackage** (incluido en el JDK 21).
+No hace falta Electron: JavaFX se empaqueta con **jpackage** (incluido en el JDK 21). Para el instalador `.exe` hacen falta **Maven 3.9+** y **WiX Toolset 3.x** en el `PATH` de Windows, además del JDK 21. En este equipo el JDK está disponible; Maven y WiX deben instalarse/configurarse en `PATH` para usar el `.bat` normalmente.
 
 ```bat
 cd archive-app
-empaquetar-exe.bat      :: instalador "SF Archive" con acceso directo (requiere WiX Toolset)
+empaquetar-exe.bat      :: instalador "SF Archive" con acceso directo (requiere WiX 3.x)
+empaquetar-exe.bat portable  :: carpeta portable sin WiX, en dist\SF Archive\
 ```
 
-Sin WiX, cambia `--type exe` por `--type app-image` en el script y obtendrás una carpeta con `SF Archive.exe` lista para usar. En Linux/macOS: `./empaquetar.sh`.
+El `.bat` verifica los requisitos y termina con error si el empaquetado falla. La carpeta portable contiene `SF Archive.exe` y el runtime Java necesario. En Linux/macOS: `./empaquetar.sh`.
 
 ## Despliegue
 
 - **Base de datos** → Railway / cualquier MySQL 8: ejecuta los dos scripts.
-- **API** → Railway/Render: `java -jar sfa-api.jar` con `SFA_DB_URL`, `SFA_DB_USER=sfa_web`, `SFA_DB_PASSWORD` (el puerto se lee de `PORT`).
-- **Web** → Cloudflare Pages / Netlify publicando `archive-web/public` y poniendo la URL de la API en `API_PRODUCCION` de `public/js/config.js`.
+- **API + web** → publica el contenedor de `archive-app/api-web/Dockerfile` en Railway, Render o un servidor Docker. Configura `SFA_DB_URL`, `SFA_DB_USER=sfa_web`, `SFA_DB_PASSWORD` y `PORT`. El contenedor incluye los estáticos y el frontend usa `/api` en el mismo dominio.
+- **Web estática separada (opcional)** → Cloudflare Pages / Netlify publicando `archive-web/public`; define `SFA_API_BASE` con la URL HTTPS completa de la API antes de cargar los módulos. Sin esa variable, el sitio usa el mismo origen y el contenido de demostración como respaldo.
 - **App de escritorio** → apunta a la misma base de datos con `archive.properties`.
 
 ## Tecnologías
 
-Java 21 · JavaFX 21 (WebView + Leaflet) · Javalin 6 · JDBC + HikariCP · MySQL 8 · HTML/CSS/JS nativo · Leaflet 1.9 + CARTO Dark Matter · Maven.
+Java 21 · JavaFX 21 (WebView + Leaflet) · Javalin 6 · JDBC + HikariCP · MySQL 8 · HTML/CSS/JS nativo · Leaflet 1.9 + OpenStreetMap · Maven.
 
 ---
 *Proyecto de ficción para un TFG. Personas, entidades e incidentes son inventados; los lugares de San Francisco son reales.*

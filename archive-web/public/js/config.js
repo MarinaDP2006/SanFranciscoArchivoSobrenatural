@@ -28,7 +28,7 @@ export const CONFIG = {
   REFRESCO_MS: 30000,
   MAPA_CENTRO: [37.7749, -122.4194], // San Francisco
   MAPA_ZOOM: 12,
-  TILES: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  TILES_ATRIBUCION: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  TILES_OSM: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  TILES_OSM_ATRIBUCION: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   DEMO_JSON: "data/demo.json",
 };

@@ -1,42 +1,38 @@
 # Tutorial · Cómo funciona el San Francisco Archive (y cómo tocarlo sin miedo)
 
-Guía para entender el proyecto desde cero, pensada para 2.º de **DAM**: te acuerdas de Java "normal" y estás empezando con **JavaFX y Scene Builder**. Vamos a ir de lo fácil a lo difícil y siempre con ejemplos **sacados del propio proyecto**.
+Guía para entender el proyecto desde cero.
 
 > Consejo: ten abierto el proyecto en el IDE mientras lees. Cada vez que aparezca una ruta como `core/.../ContratoService.java`, ábrela y busca lo que se explica.
 
 ## Índice
-
-1. [La idea en un minuto](#1-la-idea-en-un-minuto)
-2. [Preparar el ordenador: qué instalar y cómo](#2-preparar-el-ordenador)
-3. [Arrancar todo paso a paso](#3-arrancar-todo-paso-a-paso)
-4. [Mapa de carpetas y clase por clase](#4-mapa-de-carpetas)
-5. [Repaso de Java que usa el proyecto](#5-repaso-de-java-que-usa-el-proyecto)
-6. [La base de datos](#6-la-base-de-datos)
-7. [Hablar con MySQL desde Java (JDBC)](#7-hablar-con-mysql-desde-java-jdbc)
-8. [Las capas: modelo → DAO → servicio → pantalla](#8-las-capas-modelo--dao--servicio--pantalla)
-9. [JavaFX: cómo están hechas las pantallas](#9-javafx-cómo-están-hechas-las-pantallas)
-10. [JavaFX con FXML y Scene Builder](#10-javafx-con-fxml-y-scene-builder)
-11. [La API y la web: cómo la app actualiza la web](#11-la-api-y-la-web-cómo-la-app-actualiza-la-web)
-12. [Recetas: cambios típicos paso a paso](#12-recetas-cambios-típicos-paso-a-paso)
-13. [Ejercicios para practicar](#13-ejercicios-para-practicar)
-14. [Errores frecuentes y soluciones](#14-errores-frecuentes-y-soluciones)
-15. [Glosario](#15-glosario)
-
+1. [La idea en un minuto]
+2. [Preparar el ordenador: qué instalar y cómo]
+3. [Arrancar todo paso a paso]
+4. [Mapa de carpetas y clase por clase]
+5. [Repaso de Java que usa el proyecto]
+6. [La base de datos]
+7. [Hablar con MySQL desde Java (JDBC)]
+8. [Las capas: modelo → DAO → servicio → pantalla]
+9. [JavaFX: cómo están hechas las pantallas]
+10. [JavaFX con FXML y Scene Builder]
+11. [La API y la web: cómo la app actualiza la web]
+12. [Recetas: cambios típicos paso a paso]
+13. [Errores frecuentes y soluciones]
+14. [Glosario]
 ---
 
 ## 1. La idea en un minuto
 
 Hay **dos mundos** que comparten **una base de datos**:
-
 ```
   App de escritorio (JavaFX)          MySQL               API (Java)            Web (HTML/JS)
   la usan admins y potenciales  ──▶  sf_archive  ◀──  lee y entrega JSON  ◀──  la usan ciudadanos
   ESCRIBE (crea, edita, asigna)                         (solo lectura)          (sin login)
 ```
 
-- **La app** es "la oficina secreta": aquí James, Sarah, tú y los potenciales gestionáis incidentes, contratos, monederos…
+- **La app** es "la oficina secreta": aquí James, Sarah, yo y los potenciales gestionáis incidentes, contratos, monederos…
 - **La web** es "el periódico": solo enseña lo que la app marca como **publicado**.
-- La **API** es el "mensajero" entre MySQL y la web (la web no puede hablar directamente con MySQL; un navegador no sabe hacer eso).
+- La **API** es el "mensajero" entre MySQL y la web (la web no puede hablar directamente con MySQL.
 
 Ejemplo real: en la app marcas un incidente como *Publicado en la web* → se guarda `publicado = 1` en MySQL → la web, que pregunta a la API cada 30 segundos, lo recibe y lo pinta en el mapa. Nadie "sube" nada a mano.
 
@@ -50,10 +46,10 @@ Ejemplo real: en la app marcas un incidente como *Publicado en la web* → se gu
 | --- | --- | --- | --- |
 | 1 | **JDK 21** | ✅ Sí | Compilar y ejecutar Java |
 | 2 | **IntelliJ IDEA Community** (o NetBeans) | ✅ Sí | Escribir y ejecutar el código (trae Maven dentro) |
-| 3 | **XAMPP** (o MySQL 8) | ✅ Sí | La base de datos |
+| 3 | **MySQL Server Community 8** (o MariaDB) | ✅ Sí | La base de datos local |
 | 4 | **Git** | ✅ Sí | Descargar el proyecto y subir cambios |
 | 5 | **Scene Builder** | Recomendada | Diseñar pantallas FXML (clase) |
-| 6 | **MySQL Workbench** | Opcional | Ver y consultar las tablas con comodidad (phpMyAdmin de XAMPP también vale) |
+| 6 | **MySQL Workbench** | Recomendada | Conectar al servidor y ejecutar los scripts SQL |
 | 7 | **Maven** suelto | Opcional | Solo si quieres usar `mvn` desde la terminal |
 | 8 | Navegador (Chrome, Firefox, Edge) | ✅ Sí | Ver la web |
 
@@ -85,17 +81,19 @@ Las instrucciones son para **Windows** (lo normal en clase). En Mac/Linux los pa
 
 > ¿Usas NetBeans? *File → Open Project* → `archive-app`. NetBeans también entiende Maven sin instalar nada.
 
-### 2.4 XAMPP (MySQL/MariaDB)
+### 2.4 MySQL Server Community 8
 
-1. **https://www.apachefriends.org** → descarga XAMPP para Windows → instala (con *Apache*, *MySQL* y *phpMyAdmin* marcados basta).
-2. Abre el **XAMPP Control Panel** → botón **Start** en **MySQL** (y en **Apache** si quieres usar phpMyAdmin). Se ponen en verde.
-3. phpMyAdmin: **http://localhost/phpmyadmin**
-4. Por defecto el usuario es `root` **sin contraseña**.
+Descarga **MySQL Installer Community** desde [dev.mysql.com/downloads/installer](https://dev.mysql.com/downloads/installer/). Si ya existe el servicio `MySQL80`, no instales otra instancia encima: abre `services.msc` y arráncalo. Si estás configurando una instalación nueva:
 
-> XAMPP trae **MariaDB**, que es "primo hermano" de MySQL: el proyecto funciona igual.
-> **Si el puerto 3306 está ocupado** (tenías otro MySQL instalado), para el otro servicio o cambia el puerto en XAMPP → *Config → my.ini* (`port=3307`) y en `archive.properties` (`localhost:3307`).
+1. En *Setup Type*, elige `Server Only` si solo necesitas la base de datos, o `Developer Default` si también vas a instalar Workbench.
+2. En *Type and Networking*, elige `Development Computer`. Mantén `TCP/IP` activado, el puerto `3306`, y deja `Named Pipe` y `Shared Memory` desactivados. Si la conexión será solo desde este PC, desmarca *Open Windows Firewall ports for network access*.
+3. En *Authentication Method*, conserva la opción recomendada. En *Accounts and Roles*, crea una contraseña para `root`, confírmala y guárdala; no es la contraseña de la app.
+4. En *Windows Service*, usa el nombre `MySQL80`, activa *Start the MySQL Server at System Startup* y aplica la configuración.
+5. Comprueba que el servicio está en ejecución: `Win + R` → `services.msc` → `MySQL80` → estado **En ejecución**.
 
-**Alternativa sin XAMPP:** *MySQL Installer* desde https://dev.mysql.com/downloads/installer/ → instala *MySQL Server 8* + *MySQL Workbench*. Te pedirá una contraseña para `root`: apúntala.
+El servicio `MySQL80` debe usar el puerto `3306`, que es el que tiene configurado el proyecto. Si ya hay otro programa ocupando ese puerto, detén esa instancia antes de iniciar este servidor.
+
+**Alternativa:** XAMPP incluye MariaDB, compatible con este proyecto; inicia `MySQL` desde el panel de XAMPP. No ejecutes simultáneamente MySQL80 y XAMPP en el mismo puerto.
 
 ### 2.5 Git
 
@@ -118,9 +116,15 @@ Las instrucciones son para **Windows** (lo normal en clase). En Mac/Linux los pa
 2. Conéctalo con IntelliJ: *File → Settings → Languages & Frameworks → JavaFX* → *Path to SceneBuilder* → `C:\Users\<tu usuario>\AppData\Local\SceneBuilder\SceneBuilder.exe`.
 3. Ahora, con clic derecho sobre cualquier `.fxml` → **Open in SceneBuilder**.
 
-### 2.7 MySQL Workbench (opcional)
+### 2.7 MySQL Workbench
 
-https://dev.mysql.com/downloads/workbench/ → instalar → *+* nueva conexión → host `127.0.0.1`, puerto `3306`, usuario `root`. Funciona también con el MySQL de XAMPP.
+Instálalo desde [dev.mysql.com/downloads/workbench](https://dev.mysql.com/downloads/workbench/), o selecciónalo en *MySQL Installer → Add*. Para crear una conexión:
+
+1. Pulsa **+** junto a *MySQL Connections* y ponle el nombre `SFA local`.
+2. Usa *Hostname* `127.0.0.1`, *Port* `3306`, *Username* `root`; pulsa **Store in Vault** para guardar localmente la contraseña de root y después **Test Connection**.
+3. Abre `database/01_schema.sql` con *File → Open SQL Script* y ejecútalo con el icono del rayo. Luego abre y ejecuta `database/02_datos.sql`.
+
+**Importante:** `01_schema.sql` contiene `DROP DATABASE`: elimina y vuelve a crear `sf_archive`. Úsalo solo para una instalación nueva o cuando aceptes borrar la BD. Si ya hay información que conservar, comprueba primero con `SHOW DATABASES LIKE 'sf_archive';` y ejecuta únicamente el bloque **CUENTAS DE ACCESO FINALES** del final de `02_datos.sql`. Workbench debe mostrar `Query OK` al terminar.
 
 ### 2.8 Maven en la terminal (opcional)
 
@@ -147,7 +151,8 @@ api.db.password=
 | Comprobación | Resultado esperado |
 | --- | --- |
 | `java -version` | `21.x` |
-| XAMPP → MySQL | En verde |
+| `services.msc` → `MySQL80` | En ejecución |
+| Workbench → `SFA local` → Test Connection | Connection succeeded |
 | IntelliJ → panel Maven → `archive-app` | Se ven `core`, `api-web`, `desktop-admin` sin errores rojos |
 | http://localhost/phpmyadmin | Abre (si arrancaste Apache) |
 
@@ -158,16 +163,15 @@ Si todo está bien, sigue con la sección 3. 🎉
 ## 3. Arrancar todo paso a paso
 
 ### 3.1 Crear la base de datos
+Inicia el servicio `MySQL80` y abre la conexión `SFA local` en Workbench. Para una base nueva, ejecuta `database/01_schema.sql` y después `database/02_datos.sql`. Para actualizar una base existente, ejecuta solo el bloque **CUENTAS DE ACCESO FINALES** que está al final de `02_datos.sql`.
 
-Con XAMPP: arranca **MySQL** en el panel de control. Luego, en phpMyAdmin → pestaña **Importar** → primero `database/01_schema.sql` y después `database/02_datos.sql`.
-
-Con terminal:
+También puedes ejecutar los scripts desde PowerShell o CMD si está instalado el cliente `mysql` y el directorio `bin` de MySQL está en `PATH`:
 ```bash
 mysql -u root -p < database/01_schema.sql
 mysql -u root -p < database/02_datos.sql
 ```
 
-Comprueba que existe la base de datos `sf_archive` con 13 tablas. Si algo se rompe, **vuelve a ejecutar los dos scripts**: el primero borra todo y lo crea de nuevo.
+Comprueba en Workbench que existe `sf_archive` y sus tablas. No vuelvas a ejecutar `01_schema.sql` para solucionar un error si quieres conservar los datos: ese script borra la base completa.
 
 ### 3.2 Arrancar la aplicación de escritorio
 
@@ -175,33 +179,30 @@ En IntelliJ: panel **Maven** (derecha) → `desktop-admin` → *Plugins* → *ja
 
 O por terminal, dentro de `archive-app`:
 ```bash
-mvn -pl desktop-admin -am install -DskipTests   # la primera vez
-mvn -pl desktop-admin javafx:run
+mvn -pl core -am install -DskipTests
+mvn -f desktop-admin/pom.xml org.openjfx:javafx-maven-plugin:0.0.8:run
 ```
 
-Entra con `nina` / `Archivo1906!` (admin) o `sombra` / `Potencial2026!` (potencial). Fíjate en que **el menú cambia según el rol**.
+Para usar la app y la web simultáneamente, mantén el servidor de la sección 3.3 abierto en una terminal y ejecuta la app desde una segunda terminal. Entra con el usuario corto o correo: `nina` / `nina@sfarchive.org` (`240103`), `james` / `james@sfarchive.org` (`240101`), `sarah` / `sarah@sfarchive.org` (`240102`), o la potencial `niebla` / `elena.vargas@sfarchive.org` (`240104`). Las claves demo tienen exactamente seis dígitos; el sistema también conserva la opción de contraseñas alfanuméricas de 8 caracteres o más. Cambia estas claves antes de publicar el sistema.
 
 ### 3.3 Arrancar la API + la web
-
 ```bash
 cd archive-app
-mvn package -DskipTests
+mvn -pl api-web -am package -DskipTests
 java -jar api-web/target/sfa-api.jar
 ```
-Abre **http://localhost:8080** → es la web. Prueba: http://localhost:8080/api/incidentes devuelve los datos en JSON.
+Deja esa terminal abierta. Abre **http://localhost:8080** para la web. Primero prueba `http://localhost:8080/api/salud`: debe responder `"baseDatos":"CONECTADA"`. Después prueba `http://localhost:8080/api/incidentes`; debe devolver un JSON con incidentes. Si salud dice `SIN CONEXION`, comprueba que `MySQL80` esté en ejecución y que Workbench pueda conectar a `127.0.0.1:3306`.
 
 ### 3.4 La prueba de fuego
-
 1. Con la web abierta, ve a la app → **Incidentes** → elige uno sin publicar (p. ej. *Secuestran a un anciano en Japantown*).
 2. Marca **Publicado en la web** → **Guardar**.
-3. Espera ≤30 s mirando la web: aparece en el feed y en el mapa. 🎉
+3. Espera ≤30 s mirando la web: aparece en el feed y en el mapa.
 
 Y al revés: en la web → **Pedir ayuda** → envía un aviso → en la app → **Avisos ciudadanos** → ahí está.
 
 ---
 
 ## 4. Mapa de carpetas
-
 ```
 archive-app/
 ├── pom.xml                         ← "padre" Maven: versiones de Java, JavaFX, librerías
@@ -409,7 +410,6 @@ Lee el diagrama de izquierda a derecha: **pantalla → servicio → DAO → Jdbc
 ---
 
 ## 5. Repaso de Java que usa el proyecto
-
 Todo esto es Java "normal", solo que más moderno que el de 1.º. Si algo te suena raro, aquí está.
 
 ### 5.1 `record`: una clase de datos en una línea
@@ -716,7 +716,7 @@ En `ui/Ui.java`: `Ui.info("...")`, `Ui.error("...")`, `Ui.confirmar("¿Seguro?")
 ```css
 .button.primario { -fx-background-color: #e8b04b; -fx-text-fill: #000000; }
 ```
-👉 Cambia `#e8b04b` por otro color, relanza la app y verás todos los botones principales cambiados.
+Cambia `#e8b04b` por otro color, relanza la app y verás todos los botones principales cambiados.
 
 ### 9.7 El mapa dentro de la app
 
@@ -925,23 +925,7 @@ En `02_datos.sql`, copia una línea del `INSERT INTO incidentes`, cambia `id` y 
 
 ---
 
-## 13. Ejercicios para practicar
-
-De menos a más difícil:
-
-1. ⭐ Cambia el color principal de la app (`tema.css`) y el de la web (`--accent`).
-2. ⭐ Añade un potencial nuevo desde la pantalla **Potenciales → Reclutar nuevo** y entra con su usuario.
-3. ⭐ En Workbench, escribe una consulta que muestre los potenciales con saldo mayor de 1000 $ ordenados de mayor a menor.
-4. ⭐⭐ Haz la **Receta B** (teléfono del potencial).
-5. ⭐⭐ Añade al Dashboard una tarjeta KPI con el **total de dinero en circulación** (pista: `MonederoDao.totalEnCirculacion()` y `Ui.tarjeta(...)`).
-6. ⭐⭐ Haz la pantalla de *Zonas seguras* en **FXML** con Scene Builder (sección 10) y añádela al menú junto a la original.
-7. ⭐⭐⭐ Añade un filtro por **prioridad** en *Contratos* (un `ComboBox` más, como el de estado).
-8. ⭐⭐⭐ Nueva ruta en la API: `GET /api/zonas-seguras?tipo=HOSPITAL` que filtre por tipo, y úsala en la web.
-9. ⭐⭐⭐ Escribe un test en `CoreTest` que compruebe que `Geo.distanciaKm` de un punto a sí mismo es 0.
-
----
-
-## 14. Errores frecuentes y soluciones
+## 13. Errores frecuentes y soluciones
 
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |
@@ -950,14 +934,14 @@ De menos a más difícil:
 | `JavaFX runtime components are missing` | Ejecutas la clase `ArchiveApp` directamente | Usa `mvn javafx:run` o la clase `Launcher` |
 | La web dice *Sin conexión con la API: mostrando una copia de demostración* | La API no está arrancada | `java -jar api-web/target/sfa-api.jar` |
 | La web no carga (pantalla en blanco) | Abriste el HTML con doble clic (`file://`) | Ábrela desde http://localhost:8080 |
-| El mapa sale negro sin calles | Sin internet (las calles vienen de CARTO) | Los pins se ven igual; conéctate para ver el fondo |
+| El mapa sale sin calles | Sin internet (las calles vienen de OpenStreetMap) | Los pins se ven igual; conéctate para ver el fondo |
 | `You have an error in your SQL syntax ... near '?ORDER'` | Text block sin espacio al concatenar | Ver sección 5.6 |
 | Un `@FXML` es `null` | `fx:id` distinto al nombre del atributo | Que coincidan exactamente (mayúsculas incluidas) |
 | *Un grupo táctico no puede tener más de 6 potenciales* | ¡Es el trigger funcionando! | Saca a alguien del grupo primero |
 
 ---
 
-## 15. Glosario
+## 14. Glosario
 
 | Término | Qué significa aquí |
 | --- | --- |
@@ -982,4 +966,4 @@ De menos a más difícil:
 
 ---
 
-¿Atascada? Vuelve a la [sección 8](#8-las-capas-modelo--dao--servicio--pantalla): casi cualquier duda se resuelve preguntándose «¿esto es de la pantalla, del servicio o del DAO?». Y recuerda: hasta James tardó un siglo en dominar lo sobrenatural; tú tienes un curso. 🧛‍♂️
+¿Atascada? Vuelve a la [sección 8](#8-las-capas-modelo--dao--servicio--pantalla): casi cualquier duda se resuelve preguntándose «¿esto es de la pantalla, del servicio o del DAO?». Y recuerda: hasta James tardó un siglo en dominar lo sobrenatural; tú tienes un curso.

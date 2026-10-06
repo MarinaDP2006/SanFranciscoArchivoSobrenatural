@@ -2,9 +2,9 @@
 --  SAN FRANCISCO ARCHIVE · Datos iniciales (ficción ambientada en SF)
 --  Ejecutar después de 01_schema.sql
 --
---  Contraseñas de demostración (cámbialas desde la app → Mi perfil):
---    Administradores (james, sarah, nina) ........ Archivo1906!
---    Potenciales (niebla, faro, cable, ...) ...... Potencial2026!
+--  Claves numericas demo visibles para esta instalacion local:
+--    james=240101, sarah=240102, nina=240103, niebla=240104
+--  La base solo guarda hashes PBKDF2; no guardes contrasenas en texto plano.
 -- =====================================================================
 USE sf_archive;
 SET NAMES utf8mb4;
@@ -312,3 +312,26 @@ INSERT INTO registro_actividad (usuario_id, accion, entidad, entidad_id, detalle
 (3, 'CONVERTIR','SOLICITUD', 1,  'SF-7K2Q9M → incidente SFA-2026-019',           '2026-10-02 23:40:00'),
 (3, 'PUBLICAR', 'NOTICIA',   7,  'Vecinos de la Misión organizan rondas',        '2026-10-03 08:00:00'),
 (13,'REPORTAR', 'INCIDENTE', 20, 'Informe de campo bajo Coit Tower',             '2026-10-03 06:40:00');
+
+-- ---------------------------------------------------------------------
+-- CUENTAS DE ACCESO FINALES: tres administradores y un potencial
+-- Ejecuta este bloque tambien sobre una base existente para aplicar los cambios.
+-- Conserva las fichas de potenciales, incidentes, contratos y movimientos.
+-- ---------------------------------------------------------------------
+START TRANSACTION;
+
+DELETE FROM usuarios
+WHERE username NOT IN ('james', 'sarah', 'nina', 'niebla');
+
+UPDATE usuarios
+SET password_hash = CASE username
+	WHEN 'james' THEN 'pbkdf2_sha256$65536$EZ9qqaSuoQKdoqnkwjNqaQ==$1sW0Ruqe6oVpuyAj1D70inWeta/4mI0yoIAXShlEcvs='
+	WHEN 'sarah' THEN 'pbkdf2_sha256$65536$nF7eBfYqdApf8CmIkQzdJA==$KftKm0MwABzr2O0KoKx5VHutezIj3dABK5z3KWwxlQA='
+	WHEN 'nina' THEN 'pbkdf2_sha256$65536$K0Cs7SWJUiTCQ0un6imuwQ==$vmoijqarWuCGqmUyKTwjVNdYaNFRZd0ALbS6oh+gXRk='
+	WHEN 'niebla' THEN 'pbkdf2_sha256$65536$uCLw39nGv/OJ/wjW1LK0XQ==$jGmxdUCZxPVVDv/KS/CnfVhRQfVJsasX/XiIlM16LZU='
+	ELSE password_hash
+END,
+activo = 1
+WHERE username IN ('james', 'sarah', 'nina', 'niebla');
+
+COMMIT;
