@@ -86,9 +86,8 @@ public final class ApiServer {
      * (en Railway/Render el puerto llega en la variable de entorno PORT).
      */
     public static void main(String[] args) {
-        // La API se conecta con el usuario MySQL de permisos mínimos (si no se indica otro).
-        // La API se conecta con el usuario MySQL de permisos mínimos (solo vistas públicas)
-        // salvo que se indique otro con variables de entorno
+        // La API usa la cuenta de gestión para ejecutar rutas protegidas de administración.
+        // En producción, define SFA_DB_USER y SFA_DB_PASSWORD como secretos del servidor.
         if (System.getenv("SFA_DB_USER") == null && System.getProperty("sfa.db.user") == null) {
             System.setProperty("sfa.db.user", Config.get("api.db.user", "sfa_admin"));
             System.setProperty("sfa.db.password", Config.get("api.db.password", "sfa_admin_2026"));
