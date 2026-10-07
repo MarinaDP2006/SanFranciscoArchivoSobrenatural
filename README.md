@@ -1,5 +1,4 @@
 # San Francisco Archive · Sistema de Gestión de Anomalías
-
 > TFG · Información, localización y resolución de incidentes (normales y sobrenaturales) en San Francisco, California.
 
 El Archivo es una organización privada dirigida desde San Francisco por **James Pratt** (62 años, 190 de experiencia sobrenatural) y **Sarah Summers** (53 años, 35 de experiencia), matrimonio, con **Nina** como administradora del sistema. Gestionan una red de **10 Potenciales** que resuelven incidentes que para el público son noticias normales: **secuestros, asesinatos y desapariciones**. Detrás de cada uno hay una anomalía que solo se resuelve con un **Contrato**.
@@ -23,18 +22,12 @@ El proyecto activo es una aplicación web completa: toda la gestión del archivo
 
 Todo lo que se publica desde la web de gestión (incidentes, noticias, zonas seguras, cierres de casos) aparece en la web pública en el siguiente refresco automático (30 s). Los avisos que envían los ciudadanos desde la web llegan a la gestión y a la base de datos en «Avisos ciudadanos».
 
-> 📘 **¿Empiezas con el proyecto?** Lee el [TUTORIAL.md](TUTORIAL.md): explica cómo arrancar MySQL, la API y la web.
-
 ## Estructura del repositorio
-
 ```
 database/                  Base de datos MySQL
   01_schema.sql            13 tablas, 2 vistas públicas, triggers y usuarios MySQL
   02_datos.sql             Datos de San Francisco: 3 admins, 10 potenciales, grupos, incidentes,
                            contratos, monederos, informes, noticias, zonas seguras…
-archive-app/               LEGACY (se mantiene en Git, pero no es la aplicación activa)
-  core/                    Modelo, DAO JDBC y servicios del backend original
-  desktop-admin/           Versión antigua de escritorio JavaFX (no activa en el flujo principal)
   api-web/                 Backend Javalin activo de la web y sus operaciones admin protegidas
 archive-web/               APLICACIÓN ACTIVA (web + gestión web)
   public/                  HTML + CSS + JS nativo + Leaflet (incluido), sin compilación
