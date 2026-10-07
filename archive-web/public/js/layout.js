@@ -6,6 +6,7 @@ const ENLACES = [
   ["mapa", "index.html#monitor", "Mapa en vivo"],
   ["noticias", "noticias.html", "Noticias"],
   ["archivo", "archivo.html", "El archivo"],
+  ["admin", "admin-login.html", "Acceso admin"],
 ];
 
 export function montarLayout() {

@@ -4,41 +4,43 @@
 
 El Archivo es una organización privada dirigida desde San Francisco por **James Pratt** (62 años, 190 de experiencia sobrenatural) y **Sarah Summers** (53 años, 35 de experiencia), matrimonio, con **Nina** como administradora del sistema. Gestionan una red de **10 Potenciales** que resuelven incidentes que para el público son noticias normales: **secuestros, asesinatos y desapariciones**. Detrás de cada uno hay una anomalía que solo se resuelve con un **Contrato**.
 
-El sistema está dividido en **dos capas**:
+El proyecto activo es una aplicación web completa: toda la gestión del archivo se hace desde la web, con login de administración incluido. La carpeta `archive-app/` se conserva en el repositorio como legado histórico, pero no es la base del proyecto activo.
 
 | Capa | Qué es | Quién la usa | Login |
 | --- | --- | --- | --- |
 | **Pública** · `archive-web/` | Web informativa: feed en vivo, mapa oscuro, noticias y formulario anónimo «Pedir ayuda» | Ciudadanos | **Nunca** |
-| **Privada** · `archive-app/` | Aplicación de escritorio **JavaFX** que gestiona todo y actualiza la web | 3 administradores + 10 potenciales | Sí |
+| **Gestión web** · `archive-web/public/admin-login.html` | Portal de administración dentro de la web, con login real y dashboard de archivo | 3 administradores + potenciales activos | **Sí** |
+| **Legacy** · `archive-app/` | Código antiguo de escritorio JavaFX, mantenido solo como referencia histórica | desarrolladores | opcional |
 
 ```
-                  escribe                       lee (vistas públicas)
- ┌──────────────────────────┐        ┌─────────┐        ┌────────────────────┐        ┌──────────────┐
- │  App de gestión JavaFX   │ ─────▶ │  MySQL  │ ◀───── │ API Javalin (8080) │ ◀───── │ Web pública  │
- │  (admins y potenciales)  │  JDBC  │sf_archive│  JDBC │  solo lectura +    │  fetch │ (sin login)  │
- └──────────────────────────┘        └─────────┘        │  avisos anónimos   │  30 s  └──────────────┘
-                                                        └────────────────────┘
+                  escribe / valida                       lee (vistas públicas)
+ ┌─────────────────────────────┐        ┌─────────┐        ┌────────────────────┐        ┌──────────────┐
+ │  Gestión web (admin login)  │ ─────▶ │  MySQL  │ ◀───── │ API Javalin (8080) │ ◀───── │ Web pública  │
+ │  /admin-login.html + panel  │  JDBC  │sf_archive│  JDBC │  solo lectura +    │  fetch │ (sin login)  │
+ │  de administración          │        └─────────┘        │  avisos anónimos   │  30 s  └──────────────┘
+ └─────────────────────────────┘                               └────────────────────┘
 ```
 
-Todo lo que se publica desde la app (incidentes, noticias, zonas seguras, cierres de casos) aparece en la web en el siguiente refresco automático (30 s). Los avisos que envían los ciudadanos desde la web llegan a la app en «Avisos ciudadanos».
+Todo lo que se publica desde la web de gestión (incidentes, noticias, zonas seguras, cierres de casos) aparece en la web pública en el siguiente refresco automático (30 s). Los avisos que envían los ciudadanos desde la web llegan a la gestión y a la base de datos en «Avisos ciudadanos».
 
-> 📘 **¿Empiezas con el proyecto?** Lee el [TUTORIAL.md](TUTORIAL.md): explica paso a paso cómo arrancarlo, cómo está hecho (Java, JDBC, JavaFX, FXML/Scene Builder, API y web) y cómo modificarlo.
+> 📘 **¿Empiezas con el proyecto?** Lee el [TUTORIAL.md](TUTORIAL.md): explica cómo arrancar MySQL, la API y la web.
 
 ## Estructura del repositorio
 
 ```
 database/                  Base de datos MySQL
-  01_schema.sql            13 tablas, 2 vistas públicas, triggers (máx. 6 por grupo) y usuarios MySQL
-  02_datos.sql             Datos de San Francisco: 3 admins, 10 potenciales, 4 grupos, 20 incidentes,
-                           16 contratos, monederos, informes, noticias, zonas seguras…
-archive-app/               APLICACIÓN DE GESTIÓN (carpeta aparte de la web)
-  core/                    Modelo, DAO JDBC, servicios (contratos, monederos, grupos…), seguridad PBKDF2
-  desktop-admin/           Aplicación de escritorio JavaFX (lo que usan James, Sarah, Nina y los potenciales)
-  api-web/                 API pública Javalin que alimenta la web (solo lectura + avisos anónimos)
-  empaquetar-exe.bat       Genera el instalador .exe para Windows (jpackage)
-archive-web/               WEB PÚBLICA (solo informativa)
+  01_schema.sql            13 tablas, 2 vistas públicas, triggers y usuarios MySQL
+  02_datos.sql             Datos de San Francisco: 3 admins, 10 potenciales, grupos, incidentes,
+                           contratos, monederos, informes, noticias, zonas seguras…
+  03_permisos_login_web.sql Permisos mínimos de autenticación para una base ya instalada
+archive-app/               LEGACY (se mantiene en Git, pero no es la aplicación activa)
+  core/                    Modelo, DAO JDBC y servicios del backend original
+  desktop-admin/           Versión antigua de escritorio JavaFX (no activa en el flujo principal)
+  api-web/                 Backend original de la API, mantenido como referencia de integración
+archive-web/               APLICACIÓN ACTIVA (web + gestión web)
   public/                  HTML + CSS + JS nativo + Leaflet (incluido), sin compilación
-docker-compose.yml         MySQL 8 con los scripts cargados automáticamente (opcional)
+  public/admin-login.html  Login de administración desde la web
+  public/admin.html        Panel web con sesión y resumen de estadísticas
 ```
 
 ## Puesta en marcha (local)
@@ -52,18 +54,16 @@ mysql -u root -p < database/01_schema.sql
 mysql -u root -p < database/02_datos.sql
 ```
 
-O con Docker: `docker compose up -d` (carga los scripts de `database/` en orden).
-
 **En este PC el servidor ya está instalado**: existe el servicio `MySQL80`, pero está detenido. No instales otro servidor encima. Abre `services.msc`, busca `MySQL80` y pulsa **Iniciar** (o abre PowerShell como administrador y ejecuta `Start-Service MySQL80`). Instala [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) si no lo tienes; sirve para conectarte a `localhost:3306` y ejecutar los SQL. Si el instalador de la captura es lo único que descargaste, el paquete completo se llama `mysql-installer-community`; el paquete `mysql-installer-web-community` es solo un instalador pequeño que descarga componentes durante la instalación.
 
-Para una base nueva, en Workbench ejecuta `database/01_schema.sql` y después `database/02_datos.sql`. Si `sf_archive` ya tiene datos, ejecuta solamente el bloque **CUENTAS DE ACCESO FINALES** del final de `database/02_datos.sql`; no ejecutes `01_schema.sql`, porque elimina y crea de nuevo la base. La aplicación conecta con `sfa_admin` / `sfa_admin_2026`; el usuario de la API es `sfa_web` / `sfa_web_2026`.
+Para una base nueva, en Workbench ejecuta `database/01_schema.sql` y después `database/02_datos.sql`. Si `sf_archive` ya existe, no ejecutes `01_schema.sql`, porque elimina y crea de nuevo la base: ejecuta `database/03_permisos_login_web.sql` para habilitar el login web sin modificar datos. La app legacy conecta con `sfa_admin`; la API usa `sfa_web`.
 
-Se crean dos usuarios MySQL con permisos mínimos:
+Se crean dos usuarios MySQL con permisos mínimos. `sfa_web` puede leer los datos públicos y los campos de cuenta necesarios para autenticar; solo puede actualizar el último acceso y añadir eventos de login a la auditoría.
 
-| Usuario MySQL | Contraseña | Para | Permisos |
-| --- | --- | --- | --- |
-| `sfa_admin` | `sfa_admin_2026` | App de escritorio | SELECT/INSERT/UPDATE/DELETE en `sf_archive` |
-| `sfa_web` | `sfa_web_2026` | API de la web | Solo las vistas públicas, zonas seguras y crear avisos |
+| Usuario MySQL | Para | Permisos |
+| --- | --- | --- |
+| `sfa_admin` | Backend legacy | SELECT/INSERT/UPDATE/DELETE en `sf_archive` |
+| `sfa_web` | API de la web | Vistas públicas, login limitado y avisos |
 
 > La web **no puede** leer la anomalía clasificada ni el Archivo Restringido: la API solo tiene acceso a las vistas `v_incidentes_publicos` y `v_noticias_publicas`.
 
@@ -85,38 +85,22 @@ java -jar api-web/target/sfa-api.jar
 ```
 
 Deja esta terminal abierta: la API y la web están sirviéndose juntas. Abre **http://localhost:8080** y comprueba **http://localhost:8080/api/salud**; debe decir `"baseDatos":"CONECTADA"`.
-Para ejecutar la API y la base de datos en contenedores, desde la raíz del repositorio:
 
-```bash
-docker compose up --build -d
+La aplicación activa es web y no usa Docker ni instaladores `.exe`; la carpeta `archive-app/` conserva el backend Java necesario para MySQL y el código JavaFX legado, pero JavaFX no se usa como interfaz activa.
+
+### 4. Abrir el acceso de administración web
+
+Con la API funcionando, abre el login:
+
+```text
+http://localhost:8080/admin-login.html
 ```
 
-Abre **http://localhost:8080**. En un servidor público, despliega esta misma imagen/Compose y publica el puerto 8080 detrás de HTTPS. La API y la web comparten origen, y la web cae automáticamente a los datos de demostración si la API no está disponible.
+El panel web actual incluye login, sesión, cierre de sesión y estadísticas del archivo. Las funciones de gestión avanzada que tenía JavaFX todavía no están migradas a pantallas web.
 
-### 4. Arrancar la aplicación de gestión
+## Cuentas de acceso
 
-Abre una **segunda terminal** para mantener API/web y escritorio funcionando a la vez. Primero compila el proyecto desde la raíz si aún no lo hiciste:
-
-```bash
-cd archive-app
-mvn -pl core -am install -DskipTests
-mvn -f desktop-admin/pom.xml org.openjfx:javafx-maven-plugin:0.0.8:run
-```
-
-Para cambiar la conexión sin recompilar copia `archive-app/archive.properties.example` como `archive.properties`.
-
-## Cuentas de acceso a la app
-
-Los ciudadanos **no tienen cuenta**. Solo existen estas 4 cuentas de acceso:
-
-| Usuario | Nombre | Rol | Estado | Contraseña |
-| --- | --- | --- | --- | --- |
-| `james` | James Pratt | Administrador (Director) | Activa | `240101` |
-| `sarah` | Sarah Summers | Administradora (Operaciones) | Activa | `240102` |
-| `nina` | Nina | Administradora (Sistema y archivista) | Activa | `240103` |
-| `niebla` | Elena Vargas · Tránsito por la niebla | Potencial (Unidad Mission) | Activa | `240104` |
-
-El login acepta el nombre de usuario o el correo. Las otras fichas de potencial se conservan, pero sus cuentas de acceso se eliminan. Estas claves numéricas de seis dígitos son solo para demostración local; cámbialas antes de cualquier despliegue público. Solo se guardan sus hashes **PBKDF2-HMAC-SHA256** (65 536 iteraciones y sal aleatoria), nunca las claves en texto plano.
+Los ciudadanos **no tienen cuenta**. Las cuentas activas se cargan desde `database/02_datos.sql`; el login acepta usuario o correo. No se publican contraseñas en la interfaz web ni en este README. Las contraseñas se guardan como hashes **PBKDF2-HMAC-SHA256** (65 536 iteraciones y sal aleatoria).
 
 ## Qué hace cada parte
 
@@ -128,23 +112,9 @@ El login acepta el nombre de usuario o el correo. Las otras fichas de potencial 
 - **El archivo**: quiénes son, cómo trabajan y preguntas frecuentes.
 - Si la API no responde, la web muestra una **copia de demostración** (`data/demo.json`) para que siga siendo navegable en un hosting estático.
 
-### Aplicación de gestión (`archive-app/desktop-admin`) — JavaFX
+### Gestión web (`archive-web/public/admin.html`)
 
-**Administradores (James, Sarah, Nina):**
-| Pantalla | Funciones |
-| --- | --- |
-| Dashboard mundial | KPIs, tabla completa de incidentes (verificados / no verificados) y **mapa en tiempo real** con incidentes, potenciales y bases de grupos |
-| Incidentes | Alta/edición, verificación, nivel de amenaza, anomalía clasificada y botón **Publicado en la web** |
-| Avisos ciudadanos | Avisos anónimos de la web → convertir en incidente + contrato, poner en revisión o descartar (el ciudadano ve la respuesta con su código) |
-| Contratos | Lista de **SOLICITADOS**, selector de **grupo táctico + potencial disponible** y botón **ASIGNAR**, que genera el **gasto de transporte automático** (25 USD + 1,80 USD/km por distancia Haversine). Completar (paga recompensa y cierra el caso en la web), fallido o cancelar (reembolsa transporte) |
-| Potenciales | Fichas, reclutamiento con creación de cuenta, vínculos familiares |
-| Grupos tácticos | Crear/editar por país y zona, **arrastrar miembros** entre listas, **máximo 6** (validado en app y con trigger MySQL) |
-| Monederos | Saldo de cada potencial, historial de movimientos y ajustes (ajuste/bonus/penalización) |
-| Archivo Restringido | Redactar y guardar el **Informe Final Clasificado** de cada contrato cerrado |
-| Noticias / Zonas seguras | Contenido de la web pública (publicar, destacar, retirar) |
-| Usuarios y actividad | Activar/desactivar cuentas, restablecer contraseñas y registro de auditoría |
-
-**Potenciales:** *Mis misiones* (iniciar y reportar finalización con informe de campo → queda pendiente de revisión), *Mi monedero*, *Mis vínculos* y *Reportar incidente* (llega como NO VERIFICADO y sin publicar).
+La versión web actual permite iniciar sesión únicamente con una cuenta ADMIN, mantiene una sesión protegida y muestra estadísticas públicas del archivo. Las pantallas de edición de incidentes, contratos, noticias, usuarios y demás flujos JavaFX están pendientes de migración; la carpeta `archive-app/` se conserva como legado y referencia.
 
 ### Ciclo de un caso
 
@@ -164,6 +134,9 @@ Ciudadano (web) ──aviso anónimo──▶ Aviso PENDIENTE ──admin convie
 | GET | `/api/noticias?categoria=&limite=` · `/api/noticias/{slug}` | Noticias publicadas |
 | GET | `/api/zonas-seguras` | Pins verdes |
 | GET | `/api/estadisticas` | Contadores por tipo, estado y barrio |
+| POST | `/api/admin/login` | Iniciar sesión en gestión web |
+| GET | `/api/admin/session` | Consultar sesión activa |
+| POST | `/api/admin/logout` | Cerrar sesión |
 | POST | `/api/ayuda` | Aviso anónimo → `{ "codigo": "SF-XXXXXX" }` |
 | GET | `/api/ayuda/{codigo}` | Estado del aviso |
 
@@ -177,24 +150,12 @@ mvn test -Dsfa.it=true -Dtest=FlujoContratoIT,CoreTest -Dsurefire.failIfNoSpecif
 #   Modifica los datos: vuelve a cargar database/*.sql después.
 ```
 
-## Generar el .exe de la aplicación
-
-No hace falta Electron: JavaFX se empaqueta con **jpackage** (incluido en el JDK 21). Para el instalador `.exe` hacen falta **Maven 3.9+** y **WiX Toolset 3.x** en el `PATH` de Windows, además del JDK 21. En este equipo el JDK está disponible; Maven y WiX deben instalarse/configurarse en `PATH` para usar el `.bat` normalmente.
-
-```bat
-cd archive-app
-empaquetar-exe.bat      :: instalador "SF Archive" con acceso directo (requiere WiX 3.x)
-empaquetar-exe.bat portable  :: carpeta portable sin WiX, en dist\SF Archive\
-```
-
-El `.bat` verifica los requisitos y termina con error si el empaquetado falla. La carpeta portable contiene `SF Archive.exe` y el runtime Java necesario. En Linux/macOS: `./empaquetar.sh`.
-
-## Despliegue
+## Despliegue web
 
 - **Base de datos** → Railway / cualquier MySQL 8: ejecuta los dos scripts.
-- **API + web** → publica el contenedor de `archive-app/api-web/Dockerfile` en Railway, Render o un servidor Docker. Configura `SFA_DB_URL`, `SFA_DB_USER=sfa_web`, `SFA_DB_PASSWORD` y `PORT`. El contenedor incluye los estáticos y el frontend usa `/api` en el mismo dominio.
+- **API + web** → despliega la API Javalin y sirve los archivos estáticos de `archive-web/public` en el mismo dominio. Configura `SFA_DB_URL`, `SFA_DB_USER=sfa_web`, `SFA_DB_PASSWORD` y `PORT`.
 - **Web estática separada (opcional)** → Cloudflare Pages / Netlify publicando `archive-web/public`; define `SFA_API_BASE` con la URL HTTPS completa de la API antes de cargar los módulos. Sin esa variable, el sitio usa el mismo origen y el contenido de demostración como respaldo.
-- **App de escritorio** → apunta a la misma base de datos con `archive.properties`.
+- **Legacy** → la carpeta `archive-app/` queda guardada en Git como referencia histórica, pero no es el producto principal ni se empaqueta ni se despliega en este flujo activo.
 
 ## Tecnologías
 

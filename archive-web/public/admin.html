@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Oswald:wght@500;600&display=swap">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/archivo.css">
+  <title>Gestión web · San Francisco Archive</title>
+</head>
+<body data-page="admin">
+  <main id="contenido" class="dashboard-shell">
+    <div class="wrap">
+      <div class="dashboard-header">
+        <div>
+          <p class="eyebrow">Archivo restringido</p>
+          <h1>Gestión web</h1>
+        </div>
+        <div>
+          <button id="logout-btn" class="btn btn-danger" type="button">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <div class="panel" style="padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);">
+        <div class="meta">
+          <span class="tag cat" id="admin-role">Cargando…</span>
+          <span id="admin-user">Cargando…</span>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-card"><span class="label">Expedientes</span><strong id="stat-total">—</strong></div>
+        <div class="dashboard-card"><span class="label">Secuestros</span><strong id="stat-SECUESTRO">—</strong></div>
+        <div class="dashboard-card"><span class="label">Asesinatos</span><strong id="stat-ASESINATO">—</strong></div>
+        <div class="dashboard-card"><span class="label">Desapariciones</span><strong id="stat-DESAPARICION">—</strong></div>
+      </div>
+
+      <div class="admin-panel">
+        <h3>Resumen operativo</h3>
+        <ul>
+          <li>La API sigue sirviendo la web pública y la lectura del mapa.</li>
+          <li>La gestión web usa el mismo backend que la app de escritorio.</li>
+          <li>La app JavaFX se mantiene como legado para tareas avanzadas del archivo.</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/layout.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

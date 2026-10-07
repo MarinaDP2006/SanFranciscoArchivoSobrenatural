@@ -324,6 +324,10 @@ GRANT SELECT ON sf_archive.v_incidentes_publicos TO 'sfa_web'@'%';
 GRANT SELECT ON sf_archive.v_noticias_publicas   TO 'sfa_web'@'%';
 GRANT SELECT ON sf_archive.zonas_seguras         TO 'sfa_web'@'%';
 GRANT SELECT, INSERT ON sf_archive.solicitudes_ayuda TO 'sfa_web'@'%';
+GRANT SELECT ON sf_archive.usuarios TO 'sfa_web'@'%';
+GRANT SELECT ON sf_archive.potenciales TO 'sfa_web'@'%';
+GRANT UPDATE (ultimo_acceso) ON sf_archive.usuarios TO 'sfa_web'@'%';
+GRANT INSERT ON sf_archive.registro_actividad TO 'sfa_web'@'%';
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON sf_archive.* TO 'sfa_admin'@'%';
 FLUSH PRIVILEGES;

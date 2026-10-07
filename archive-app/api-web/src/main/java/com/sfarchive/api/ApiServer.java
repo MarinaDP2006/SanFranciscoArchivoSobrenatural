@@ -1,5 +1,14 @@
 package com.sfarchive.api;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -7,7 +16,10 @@ import com.sfarchive.core.dao.SolicitudDao;
 import com.sfarchive.core.db.Config;
 import com.sfarchive.core.db.DataException;
 import com.sfarchive.core.db.Database;
+import com.sfarchive.core.model.Rol;
 import com.sfarchive.core.model.TipoIncidente;
+import com.sfarchive.core.service.AuthService;
+
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -16,21 +28,12 @@ import io.javalin.http.staticfiles.Location;
 import io.javalin.json.JavalinJackson;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * API pública del San Francisco Archive.
  * <p>
- * La web es SOLO informativa: consulta incidentes, noticias, zonas seguras y estadísticas,
- * y permite a cualquier ciudadano (sin registrarse) enviar una solicitud de ayuda anónima.
- * Toda la gestión se hace desde la aplicación de escritorio, que escribe en la misma base de datos:
- * cualquier cambio publicado desde la app aparece en la web en el siguiente refresco (30 s).
+ * La web es informativa y la gestión principal se hace desde la misma web con login de administración,
+ * sin depender de la app de escritorio JavaFX. Los cambios publicados desde la gestión web aparecen en
+ * la web pública con el siguiente refresco (30 s).
  */
 public final class ApiServer {
 
@@ -42,6 +45,8 @@ public final class ApiServer {
      * Para cada IP, las horas de sus últimos avisos (anti-spam). ConcurrentHashMap: seguro con varios hilos.
      */
     private static final Map<String, Deque<Long>> AVISOS_POR_IP = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Object>> ADMIN_SESIONES = new ConcurrentHashMap<>();
+    private static final String ADMIN_SESSION_COOKIE = "sfa_admin_session";
 
     /** Clase de utilidades: no se crean objetos de ella. */
     private ApiServer() { }
@@ -103,6 +108,46 @@ public final class ApiServer {
 
         // Antes de cada respuesta de la API: que el navegador no la guarde en caché (siempre datos frescos)
         app.before("/api/*", ctx -> ctx.header("Cache-Control", "no-store"));
+
+        // ---------- Login web de administración ----------
+        app.post("/api/admin/login", ctx -> {
+            LoginRequest request = ctx.bodyAsClass(LoginRequest.class);
+            if (request == null || request.username() == null || request.password() == null) {
+                throw new DataException("Usuario y contraseña son obligatorios.");
+            }
+            var auth = new AuthService();
+            var usuario = auth.login(request.username(), request.password());
+            if (usuario.rol() != Rol.ADMIN) {
+                throw new DataException("Este acceso es exclusivo para administradores.");
+            }
+            String token = UUID.randomUUID().toString();
+            Map<String, Object> info = Map.of(
+                    "id", usuario.id(),
+                    "username", usuario.username(),
+                    "email", usuario.email(),
+                    "nombre", usuario.nombreCompleto(),
+                    "rol", usuario.rol().name(),
+                    "activo", usuario.activo());
+            ADMIN_SESIONES.put(token, info);
+            ctx.header("Set-Cookie", ADMIN_SESSION_COOKIE + "=" + token + "; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax");
+            ctx.json(Map.of("ok", true, "usuario", info));
+        });
+
+        app.get("/api/admin/session", ctx -> {
+            String token = leerCookie(ctx, ADMIN_SESSION_COOKIE);
+            if (token == null || !ADMIN_SESIONES.containsKey(token)) {
+                ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "No autenticado."));
+                return;
+            }
+            ctx.json(Map.of("ok", true, "usuario", ADMIN_SESIONES.get(token)));
+        });
+
+        app.post("/api/admin/logout", ctx -> {
+            String token = leerCookie(ctx, ADMIN_SESSION_COOKIE);
+            if (token != null) ADMIN_SESIONES.remove(token);
+            ctx.header("Set-Cookie", ADMIN_SESSION_COOKIE + "=; Path=/; Max-Age=0; SameSite=Lax");
+            ctx.json(Map.of("ok", true));
+        });
 
         // ---------- Salud ----------
         app.get("/api/salud", ctx -> ctx.json(Map.of(
@@ -192,6 +237,8 @@ public final class ApiServer {
     public record AvisoCiudadano(String tipo, String descripcion, String barrio, String ubicacion,
                                  Double lat, Double lng, String contacto, String website) { }
 
+    public record LoginRequest(String username, String password) { }
+
     /**
      * Localiza la carpeta archive-web/public (se arranque desde archive-app, api-web o la raíz).
      * Si la encuentra, la API sirve también la web en http://localhost:8080.
@@ -208,6 +255,16 @@ public final class ApiServer {
     /** Lee el {id} de la URL como número (si no es un número → error 400). */
     private static int idParam(Context ctx) {
         return Integer.parseInt(ctx.pathParam("id"));
+    }
+
+    private static String leerCookie(Context ctx, String nombre) {
+        String header = ctx.header("Cookie");
+        if (header == null || header.isBlank()) return null;
+        for (String parte : header.split(";")) {
+            String[] trozos = parte.trim().split("=", 2);
+            if (trozos.length == 2 && nombre.equals(trozos[0])) return trozos[1];
+        }
+        return null;
     }
 
     /**

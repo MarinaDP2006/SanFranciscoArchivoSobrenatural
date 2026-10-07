@@ -1,23 +1,45 @@
-# Tutorial · Cómo funciona San Francisco Archive
+# Tutorial · Cómo funciona el San Francisco Archive (y cómo tocarlo sin miedo)
+
+Guía para entender el proyecto desde cero. El flujo activo es la web; los capítulos de JavaFX describen únicamente el código legacy que se conserva en Git.
 
 > Consejo: ten abierto el proyecto en el IDE mientras lees. Cada vez que aparezca una ruta como `core/.../ContratoService.java`, ábrela y busca lo que se explica.
 
+## Índice
+1. [La idea en un minuto]
+2. [Preparar el ordenador: qué instalar y cómo]
+3. [Arrancar todo paso a paso]
+4. [Mapa de carpetas y clase por clase]
+5. [Repaso de Java que usa el proyecto]
+6. [La base de datos]
+7. [Hablar con MySQL desde Java (JDBC)]
+8. [Las capas: modelo → DAO → servicio → pantalla]
+9. [JavaFX: cómo están hechas las pantallas]
+10. [JavaFX con FXML y Scene Builder]
+11. [La API y la web: cómo la app actualiza la web]
+12. [Recetas: cambios típicos paso a paso]
+13. [Errores frecuentes y soluciones]
+14. [Glosario]
+---
+
 ## 1. La idea en un minuto
-Hay **dos mundos** que comparten **una base de datos**:
+
+La web pública y la gestión administrativa comparten el mismo backend y la misma base de datos:
 ```
-  App de escritorio (JavaFX)          MySQL               API (Java)            Web (HTML/JS)
-  la usan admins y potenciales  ──▶  sf_archive  ◀──  lee y entrega JSON  ◀──  la usan ciudadanos
-  ESCRIBE (crea, edita, asigna)                         (solo lectura)          (sin login)
+    Gestión web (HTML/JS)             API (Java)                 MySQL                 Web pública
+    login + resumen              ──▶  valida/consulta  ──▶   sf_archive   ──▶  feed y mapa
+    admin y potenciales              JDBC                                            ciudadanos
 ```
 
-- **La app** es "la oficina secreta": aquí James, Sarah, yo y los potenciales gestionáis incidentes, contratos, monederos…
-- **La web** es "el periódico": solo enseña lo que la app marca como **publicado**.
-- La **API** es el "mensajero" entre MySQL y la web (la web no puede hablar directamente con MySQL.
-Ejemplo real: en la app marcas un incidente como *Publicado en la web* → se guarda `publicado = 1` en MySQL → la web, que pregunta a la API cada 30 segundos, lo recibe y lo pinta en el mapa. Nadie "sube" nada a mano.
+- **La gestión web** ofrece el login y el panel administrativo en HTML, CSS y JavaScript.
+- **La web pública** enseña los datos publicados y permite enviar avisos anónimos.
+- La **API** conecta de forma segura con MySQL; el navegador nunca se conecta directamente a la base de datos.
+
+El código JavaFX se conserva en `archive-app/desktop-admin` como legado. La interfaz activa está en `archive-web/public`; el panel web actual tiene login, sesión y estadísticas. Las pantallas avanzadas de JavaFX aún no se han migrado.
 
 ---
 
 ## 2. Preparar el ordenador
+
 ### 2.1 Lista de lo que necesitas
 
 | # | Herramienta | ¿Obligatoria? | Para qué |
@@ -102,16 +124,16 @@ Instálalo desde [dev.mysql.com/downloads/workbench](https://dev.mysql.com/downl
 2. Usa *Hostname* `127.0.0.1`, *Port* `3306`, *Username* `root`; pulsa **Store in Vault** para guardar localmente la contraseña de root y después **Test Connection**.
 3. Abre `database/01_schema.sql` con *File → Open SQL Script* y ejecútalo con el icono del rayo. Luego abre y ejecuta `database/02_datos.sql`.
 
-**Importante:** `01_schema.sql` contiene `DROP DATABASE`: elimina y vuelve a crear `sf_archive`. Úsalo solo para una instalación nueva o cuando aceptes borrar la BD. Si ya hay información que conservar, comprueba primero con `SHOW DATABASES LIKE 'sf_archive';` y ejecuta únicamente el bloque **CUENTAS DE ACCESO FINALES** del final de `02_datos.sql`. Workbench debe mostrar `Query OK` al terminar.
+**Importante:** `01_schema.sql` contiene `DROP DATABASE`: elimina y vuelve a crear `sf_archive`. Úsalo solo para una instalación nueva o cuando aceptes borrar la BD. Si la base ya existe, no lo ejecutes; usa `database/03_permisos_login_web.sql` para aplicar los permisos del login sin tocar datos. Workbench debe mostrar `Query OK` al terminar.
 
 ### 2.8 Maven en la terminal (opcional)
 
-Solo si quieres escribir `mvn ...` en `cmd`:
+Solo si quieres escribir `mvn ...` en `cmd` para compilar y ejecutar la API:
 1. https://maven.apache.org/download.cgi → *Binary zip archive* → descomprímelo en `C:\maven`.
 2. *Variables de entorno* → `Path` → *Nuevo* → `C:\maven\bin`.
 3. Terminal nueva → `mvn -version`.
 
-Si no lo instalas, haz todo desde el panel **Maven** de IntelliJ (doble clic en `clean`, `package`, `javafx:run`…).
+Si no lo instalas, compila el backend desde el panel **Maven** de IntelliJ.
 
 ### 2.9 Si usas `root` en lugar de los usuarios del proyecto
 
@@ -131,7 +153,7 @@ api.db.password=
 | `java -version` | `21.x` |
 | `services.msc` → `MySQL80` | En ejecución |
 | Workbench → `SFA local` → Test Connection | Connection succeeded |
-| IntelliJ → panel Maven → `archive-app` | Se ven `core`, `api-web`, `desktop-admin` sin errores rojos |
+| IntelliJ → panel Maven → `archive-app` | Se ven los módulos del backend sin errores rojos |
 | http://localhost/phpmyadmin | Abre (si arrancaste Apache) |
 
 Si todo está bien, sigue con la sección 3. 🎉
@@ -141,7 +163,7 @@ Si todo está bien, sigue con la sección 3. 🎉
 ## 3. Arrancar todo paso a paso
 
 ### 3.1 Crear la base de datos
-Inicia el servicio `MySQL80` y abre la conexión `SFA local` en Workbench. Para una base nueva, ejecuta `database/01_schema.sql` y después `database/02_datos.sql`. Para actualizar una base existente, ejecuta solo el bloque **CUENTAS DE ACCESO FINALES** que está al final de `02_datos.sql`.
+Inicia el servicio `MySQL80` y abre la conexión `SFA local` en Workbench. Para una base nueva, ejecuta `database/01_schema.sql` y después `database/02_datos.sql`. Para una base existente, ejecuta `database/03_permisos_login_web.sql`; no vuelvas a ejecutar el esquema destructivo.
 
 También puedes ejecutar los scripts desde PowerShell o CMD si está instalado el cliente `mysql` y el directorio `bin` de MySQL está en `PATH`:
 ```bash
@@ -151,25 +173,19 @@ mysql -u root -p < database/02_datos.sql
 
 Comprueba en Workbench que existe `sf_archive` y sus tablas. No vuelvas a ejecutar `01_schema.sql` para solucionar un error si quieres conservar los datos: ese script borra la base completa.
 
-### 3.2 Arrancar la aplicación de escritorio
+### 3.2 Arrancar la API y la web
 
-En IntelliJ: panel **Maven** (derecha) → `desktop-admin` → *Plugins* → *javafx* → doble clic en **`javafx:run`**.
-
-O por terminal, dentro de `archive-app`:
+Desde la carpeta raíz del repositorio, compila la API y arráncala:
 ```bash
-mvn -pl core -am install -DskipTests
-mvn -f desktop-admin/pom.xml org.openjfx:javafx-maven-plugin:0.0.8:run
+mvn -f archive-app/pom.xml -pl api-web -am package -DskipTests
+java -jar archive-app/api-web/target/sfa-api.jar
 ```
 
-Para usar la app y la web simultáneamente, mantén el servidor de la sección 3.3 abierto en una terminal y ejecuta la app desde una segunda terminal. Entra con el usuario corto o correo: `nina` / `nina@sfarchive.org` (`240103`), `james` / `james@sfarchive.org` (`240101`), `sarah` / `sarah@sfarchive.org` (`240102`), o la potencial `niebla` / `elena.vargas@sfarchive.org` (`240104`). Las claves demo tienen exactamente seis dígitos; el sistema también conserva la opción de contraseñas alfanuméricas de 8 caracteres o más. Cambia estas claves antes de publicar el sistema.
+La API sirve también los archivos de `archive-web/public` en `http://localhost:8080`.
 
-### 3.3 Arrancar la API + la web
-```bash
-cd archive-app
-mvn -pl api-web -am package -DskipTests
-java -jar api-web/target/sfa-api.jar
-```
-Deja esa terminal abierta. Abre **http://localhost:8080** para la web. Primero prueba `http://localhost:8080/api/salud`: debe responder `"baseDatos":"CONECTADA"`. Después prueba `http://localhost:8080/api/incidentes`; debe devolver un JSON con incidentes. Si salud dice `SIN CONEXION`, comprueba que `MySQL80` esté en ejecución y que Workbench pueda conectar a `127.0.0.1:3306`.
+### 3.3 Entrar en la gestión web
+
+Abre `http://localhost:8080/admin-login.html` e inicia sesión con una cuenta activa de la base de datos. El README y la interfaz no muestran contraseñas. Después del login se abre el panel de estadísticas. Comprueba también `http://localhost:8080/api/salud`: debe responder `"baseDatos":"CONECTADA"`. Si el login devuelve un error, ejecuta `database/03_permisos_login_web.sql` en Workbench y revisa la salida de la terminal de la API.
 
 ### 3.4 La prueba de fuego
 1. Con la web abierta, ve a la app → **Incidentes** → elige uno sin publicar (p. ej. *Secuestran a un anciano en Japantown*).

@@ -1,7 +1,7 @@
 // =====================================================================
-// Configuración del portal público.
-// La web SOLO LEE datos: todo se gestiona desde la aplicación de escritorio
-// (archive-app/desktop-admin), que escribe en MySQL. La API los sirve aquí.
+// Configuración del portal público y de la gestión web.
+// La web pública solo lee datos, y la gestión de administración vive en la
+// misma web con login y backend. La API sigue sirviendo los datos JSON aquí.
 // =====================================================================
 
 /**

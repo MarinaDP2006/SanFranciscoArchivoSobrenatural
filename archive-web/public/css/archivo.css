@@ -245,6 +245,34 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: .03e
 .faq summary { cursor: pointer; font-weight: 600; }
 .faq p { color: var(--muted); margin: 10px 0 0; }
 
+/* ---------- Web admin ---------- */
+.auth-shell {
+  display: grid; place-items: center; min-height: calc(100vh - 120px); padding: 32px 16px;
+}
+.auth-card {
+  width: min(100%, 560px); background: rgba(15, 20, 22, 0.92); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.35); padding: 28px; }
+.auth-card h1 { font-size: clamp(28px, 4vw, 42px); margin: 0 0 10px; text-transform: uppercase; }
+.auth-card .lead { color: var(--muted); margin: 0 0 18px; }
+.auth-form { gap: 14px; }
+.auth-form .btn { width: 100%; justify-content: center; }
+.auth-foot { color: var(--muted); font-size: 12px; margin-top: 16px; }
+.demo-accounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 18px 0 8px; }
+.demo-accounts div { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; font-size: 12px; color: var(--muted); }
+.demo-accounts strong { display: block; color: var(--text); }
+.dashboard-shell { padding: 48px 0 56px; }
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.dashboard-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.dashboard-card .label { color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.dashboard-card strong { display: block; margin-top: 8px; font-size: clamp(24px, 3vw, 36px); font-family: var(--display); }
+.admin-panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 16px; }
+.admin-panel h3 { font-size: 20px; margin-bottom: 10px; text-transform: uppercase; }
+.admin-panel ul { margin: 0; padding-left: 18px; color: var(--muted); }
+@media (max-width: 620px) {
+  .demo-accounts, .dashboard-grid { grid-template-columns: 1fr; }
+}
+
 /* ---------- Pie ---------- */
 .site-footer { border-top: 1px solid var(--line); background: var(--bg-2); color: var(--muted); font-size: 12px; }
 .site-footer .wrap { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 24px; padding-top: 32px; padding-bottom: 32px; }

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Oswald:wght@500;600&display=swap">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/archivo.css">
+  <title>Acceso administrativo · San Francisco Archive</title>
+</head>
+<body data-page="admin-login">
+  <main id="contenido" class="auth-shell">
+    <div class="auth-card">
+      <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span>Acceso restringido</p>
+      <h1>Portal de gestión</h1>
+      <p class="lead">Inicia sesión con una cuenta activa de administrador.</p>
+
+      <form id="login-form" class="form auth-form" novalidate>
+        <label>
+          <b>Usuario o email</b>
+          <input type="text" name="username" placeholder="Nombre de usuario o email" autocomplete="username" required>
+        </label>
+        <label>
+          <b>Contraseña</b>
+          <input type="password" name="password" placeholder="••••••" autocomplete="current-password" required>
+        </label>
+        <button type="submit" class="btn btn-primary">Entrar en gestión</button>
+        <div id="login-status" class="alert" aria-live="polite">Introduce tus credenciales de acceso.</div>
+      </form>
+
+      <p class="auth-foot">Solo las cuentas ADMIN activas pueden acceder. Las credenciales se gestionan desde la base de datos.</p>
+    </div>
+  </main>
+
+  <script type="module" src="js/layout.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
