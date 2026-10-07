@@ -23,26 +23,31 @@ El proyecto activo es una aplicación web completa: toda la gestión del archivo
 
 Todo lo que se publica desde la web de gestión (incidentes, noticias, zonas seguras, cierres de casos) aparece en la web pública en el siguiente refresco automático (30 s). Los avisos que envían los ciudadanos desde la web llegan a la gestión y a la base de datos en «Avisos ciudadanos».
 
+> 📘 **¿Empiezas con el proyecto?** Lee el [TUTORIAL.md](TUTORIAL.md): explica cómo arrancar MySQL, la API y la web.
+
 ## Estructura del repositorio
+
 ```
 database/                  Base de datos MySQL
   01_schema.sql            13 tablas, 2 vistas públicas, triggers y usuarios MySQL
-  02_datos.sql             Datos de San Francisco: 3 admins, 10 potenciales, grupos, incidentes, contratos, monederos, informes, noticias, zonas seguras…
-  03_permisos_login_web.sql Permisos mínimos de autenticación para una base ya instalada
+  02_datos.sql             Datos de San Francisco: 3 admins, 10 potenciales, grupos, incidentes,
+                           contratos, monederos, informes, noticias, zonas seguras…
 archive-app/               LEGACY (se mantiene en Git, pero no es la aplicación activa)
   core/                    Modelo, DAO JDBC y servicios del backend original
   desktop-admin/           Versión antigua de escritorio JavaFX (no activa en el flujo principal)
-  api-web/                 Backend original de la API, mantenido como referencia de integración
+  api-web/                 Backend Javalin activo de la web y sus operaciones admin protegidas
 archive-web/               APLICACIÓN ACTIVA (web + gestión web)
   public/                  HTML + CSS + JS nativo + Leaflet (incluido), sin compilación
   public/admin-login.html  Login de administración desde la web
-  public/admin.html        Panel web con sesión y resumen de estadísticas
+  public/admin.html        Panel web para la gestión administrativa
 ```
 
 ## Puesta en marcha (local)
+
 Requisitos: **Java 21**, **Maven 3.9+**, **MySQL Server 8** (o MariaDB 10.6+) y MySQL Workbench para administrar la base gráficamente.
 
 ### 1. Base de datos
+
 ```bash
 mysql -u root -p < database/01_schema.sql
 mysql -u root -p < database/02_datos.sql
@@ -50,18 +55,19 @@ mysql -u root -p < database/02_datos.sql
 
 **En este PC el servidor ya está instalado**: existe el servicio `MySQL80`, pero está detenido. No instales otro servidor encima. Abre `services.msc`, busca `MySQL80` y pulsa **Iniciar** (o abre PowerShell como administrador y ejecuta `Start-Service MySQL80`). Instala [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) si no lo tienes; sirve para conectarte a `localhost:3306` y ejecutar los SQL. Si el instalador de la captura es lo único que descargaste, el paquete completo se llama `mysql-installer-community`; el paquete `mysql-installer-web-community` es solo un instalador pequeño que descarga componentes durante la instalación.
 
-Para una base nueva, en Workbench ejecuta `database/01_schema.sql` y después `database/02_datos.sql`. Si `sf_archive` ya existe, no ejecutes `01_schema.sql`, porque elimina y crea de nuevo la base: ejecuta `database/03_permisos_login_web.sql` para habilitar el login web sin modificar datos. La app legacy conecta con `sfa_admin`; la API usa `sfa_web`.
+Para una base nueva, en Workbench ejecuta `database/01_schema.sql` y después `database/02_datos.sql`. Si `sf_archive` ya existe, no ejecutes `01_schema.sql`, porque elimina y crea de nuevo la base. La API de gestión usa `sfa_admin`; configura esa cuenta como secreto del servidor, nunca en JavaScript. `sfa_web` queda disponible para una API exclusivamente pública.
 
-Se crean dos usuarios MySQL con permisos mínimos. `sfa_web` puede leer los datos públicos y los campos de cuenta necesarios para autenticar; solo puede actualizar el último acceso y añadir eventos de login a la auditoría.
+Se crean dos usuarios MySQL. La API de gestión usa `sfa_admin` en el servidor; `sfa_web` solo tiene los permisos necesarios para servir información pública y guardar avisos anónimos.
 
 | Usuario MySQL | Para | Permisos |
 | --- | --- | --- |
-| `sfa_admin` | Backend legacy | SELECT/INSERT/UPDATE/DELETE en `sf_archive` |
-| `sfa_web` | API de la web | Vistas públicas, login limitado y avisos |
+| `sfa_admin` | API web de gestión y backend legacy | SELECT/INSERT/UPDATE/DELETE en `sf_archive` |
+| `sfa_web` | API pública sin gestión | Vistas públicas y envío de avisos |
 
-> La web **no puede** leer la anomalía clasificada ni el Archivo Restringido: la API solo tiene acceso a las vistas `v_incidentes_publicos` y `v_noticias_publicas`.
+Las rutas públicas de la web solo devuelven las vistas públicas; las rutas de gestión requieren sesión ADMIN. La interfaz HTML/JS nunca se conecta directamente a MySQL.
 
 ### 2. Compilar
+
 ```bash
 cd archive-app
 mvn clean package
@@ -82,6 +88,7 @@ Deja esta terminal abierta: la API y la web están sirviéndose juntas. Abre **h
 La aplicación activa es web y no usa Docker ni instaladores `.exe`; la carpeta `archive-app/` conserva el backend Java necesario para MySQL y el código JavaFX legado, pero JavaFX no se usa como interfaz activa.
 
 ### 4. Abrir el acceso de administración web
+
 Con la API funcionando, abre el login:
 
 ```text
@@ -106,7 +113,7 @@ Los ciudadanos **no tienen cuenta**. Las cuentas activas se cargan desde `databa
 
 ### Gestión web (`archive-web/public/admin.html`)
 
-La versión web actual permite iniciar sesión únicamente con una cuenta ADMIN, mantiene una sesión protegida y muestra estadísticas públicas del archivo. Las pantallas de edición de incidentes, contratos, noticias, usuarios y demás flujos JavaFX están pendientes de migración; la carpeta `archive-app/` se conserva como legado y referencia.
+La gestión web permite a las cuentas ADMIN trabajar desde el navegador: resumen, incidentes y clasificación, avisos ciudadanos, ciclo de contratos y asignaciones, potenciales, grupos tácticos, noticias, zonas seguras, monederos, Archivo Restringido, usuarios y registro de actividad. `archive-app/desktop-admin` se conserva en Git como legado, pero no hace falta iniciar JavaFX. Java/Javalin sigue siendo el backend que aplica reglas y conecta con MySQL.
 
 ### Ciclo de un caso
 
@@ -129,6 +136,13 @@ Ciudadano (web) ──aviso anónimo──▶ Aviso PENDIENTE ──admin convie
 | POST | `/api/admin/login` | Iniciar sesión en gestión web |
 | GET | `/api/admin/session` | Consultar sesión activa |
 | POST | `/api/admin/logout` | Cerrar sesión |
+| GET/POST | `/api/admin/incidentes` | Listar, crear y editar expedientes (requiere ADMIN) |
+| GET/POST | `/api/admin/solicitudes...` | Revisar, descartar o convertir avisos ciudadanos (requiere ADMIN) |
+| GET/POST | `/api/admin/contratos...` | Crear, asignar y cerrar contratos (requiere ADMIN) |
+| GET/POST | `/api/admin/potenciales...` · `/api/admin/grupos...` | Red de potenciales y grupos tácticos (requiere ADMIN) |
+| GET/POST | `/api/admin/noticias...` · `/api/admin/zonas-seguras` | Publicación web (requiere ADMIN) |
+| GET/POST | `/api/admin/monederos...` · `/api/admin/informes...` | Monederos y Archivo Restringido (requiere ADMIN) |
+| GET/POST | `/api/admin/usuarios...` · `/api/admin/actividad` | Cuentas, restablecimiento de contraseñas y auditoría (requiere ADMIN) |
 | POST | `/api/ayuda` | Aviso anónimo → `{ "codigo": "SF-XXXXXX" }` |
 | GET | `/api/ayuda/{codigo}` | Estado del aviso |
 
@@ -145,13 +159,13 @@ mvn test -Dsfa.it=true -Dtest=FlujoContratoIT,CoreTest -Dsurefire.failIfNoSpecif
 ## Despliegue web
 
 - **Base de datos** → Railway / cualquier MySQL 8: ejecuta los dos scripts.
-- **API + web** → despliega la API Javalin y sirve los archivos estáticos de `archive-web/public` en el mismo dominio. Configura `SFA_DB_URL`, `SFA_DB_USER=sfa_web`, `SFA_DB_PASSWORD` y `PORT`.
-- **Web estática separada (opcional)** → Cloudflare Pages / Netlify publicando `archive-web/public`; define `SFA_API_BASE` con la URL HTTPS completa de la API antes de cargar los módulos. Sin esa variable, el sitio usa el mismo origen y el contenido de demostración como respaldo.
+- **API + web con gestión** → despliega la API Javalin y sirve los archivos estáticos de `archive-web/public` en el mismo dominio. Configura `SFA_DB_URL`, `SFA_DB_USER=sfa_admin`, `SFA_DB_PASSWORD` y `PORT` como secretos del servidor. No incluyas esos valores en el frontend.
+- **Web estática separada (solo portal público)** → Cloudflare Pages / Netlify publicando `archive-web/public`; define `SFA_API_BASE` con la URL HTTPS completa de la API antes de cargar los módulos. Para usar administración, web y API deben compartir origen HTTPS para la cookie de sesión.
 - **Legacy** → la carpeta `archive-app/` queda guardada en Git como referencia histórica, pero no es el producto principal ni se empaqueta ni se despliega en este flujo activo.
 
 ## Tecnologías
 
-Java 21 · JavaFX 21 (WebView + Leaflet) · Javalin 6 · JDBC + HikariCP · MySQL 8 · HTML/CSS/JS nativo · Leaflet 1.9 + OpenStreetMap · Maven.
+Java 21 · Javalin 6 · JDBC + HikariCP · MySQL 8 · HTML/CSS/JavaScript nativo · Leaflet 1.9 + OpenStreetMap · Maven. JavaFX permanece solo en el código legacy.
 
 ---
 *Proyecto de ficción para un TFG. Personas, entidades e incidentes son inventados; los lugares de San Francisco son reales.*

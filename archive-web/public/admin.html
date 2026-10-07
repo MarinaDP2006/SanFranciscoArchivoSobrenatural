@@ -31,21 +31,265 @@
         </div>
       </div>
 
-      <div class="dashboard-grid">
-        <div class="dashboard-card"><span class="label">Expedientes</span><strong id="stat-total">—</strong></div>
-        <div class="dashboard-card"><span class="label">Secuestros</span><strong id="stat-SECUESTRO">—</strong></div>
-        <div class="dashboard-card"><span class="label">Asesinatos</span><strong id="stat-ASESINATO">—</strong></div>
-        <div class="dashboard-card"><span class="label">Desapariciones</span><strong id="stat-DESAPARICION">—</strong></div>
-      </div>
+      <nav class="admin-tabs" aria-label="Gestión del archivo">
+        <button class="admin-tab" type="button" data-admin-view="resumen" aria-pressed="true">Resumen</button>
+        <button class="admin-tab" type="button" data-admin-view="incidentes" aria-pressed="false">Incidentes</button>
+        <button class="admin-tab" type="button" data-admin-view="contratos" aria-pressed="false">Contratos</button>
+        <button class="admin-tab" type="button" data-admin-view="solicitudes" aria-pressed="false">Avisos ciudadanos</button>
+        <button class="admin-tab" type="button" data-admin-view="potenciales" aria-pressed="false">Potenciales</button>
+        <button class="admin-tab" type="button" data-admin-view="grupos" aria-pressed="false">Grupos tácticos</button>
+        <button class="admin-tab" type="button" data-admin-view="noticias" aria-pressed="false">Noticias</button>
+        <button class="admin-tab" type="button" data-admin-view="zonas" aria-pressed="false">Zonas seguras</button>
+        <button class="admin-tab" type="button" data-admin-view="monederos" aria-pressed="false">Monederos</button>
+        <button class="admin-tab" type="button" data-admin-view="informes" aria-pressed="false">Archivo restringido</button>
+        <button class="admin-tab" type="button" data-admin-view="usuarios" aria-pressed="false">Usuarios</button>
+        <button class="admin-tab" type="button" data-admin-view="actividad" aria-pressed="false">Actividad</button>
+      </nav>
 
-      <div class="admin-panel">
-        <h3>Resumen operativo</h3>
-        <ul>
-          <li>La API sigue sirviendo la web pública y la lectura del mapa.</li>
-          <li>La gestión web usa el mismo backend que la app de escritorio.</li>
-          <li>La app JavaFX se mantiene como legado para tareas avanzadas del archivo.</li>
-        </ul>
-      </div>
+      <section class="admin-view" id="view-resumen" aria-labelledby="resumen-title">
+        <h2 class="admin-view-title" id="resumen-title">Resumen del archivo</h2>
+        <div class="dashboard-grid">
+          <div class="dashboard-card"><span class="label">Expedientes</span><strong id="stat-total">—</strong></div>
+          <div class="dashboard-card"><span class="label">Secuestros</span><strong id="stat-SECUESTRO">—</strong></div>
+          <div class="dashboard-card"><span class="label">Asesinatos</span><strong id="stat-ASESINATO">—</strong></div>
+          <div class="dashboard-card"><span class="label">Desapariciones</span><strong id="stat-DESAPARICION">—</strong></div>
+        </div>
+      </section>
+
+      <section class="admin-view" id="view-contratos" aria-labelledby="contratos-title" hidden>
+        <div class="admin-view-heading">
+          <div>
+            <p class="eyebrow">Operaciones</p>
+            <h2 class="admin-view-title" id="contratos-title">Contratos</h2>
+          </div>
+          <button class="icon-btn" id="refresh-contratos" type="button" title="Actualizar contratos" aria-label="Actualizar contratos">↻</button>
+        </div>
+        <div class="admin-filters" role="group" aria-label="Filtrar contratos">
+          <label for="contratos-filtro">Estado</label>
+          <select id="contratos-filtro">
+            <option value="ABIERTOS">Pendientes y abiertos</option>
+            <option value="SOLICITADO">Solicitados</option>
+            <option value="ASIGNADO">Asignados</option>
+            <option value="EN_CURSO">En curso</option>
+            <option value="PENDIENTE_REVISION">Pendientes de revisión</option>
+            <option value="CERRADOS">Cerrados</option>
+            <option value="TODOS">Todos</option>
+          </select>
+          <span id="contratos-count" class="feed-status"></span>
+        </div>
+        <div id="contratos-list" class="admin-list" aria-live="polite">
+          <p class="empty">Selecciona esta sección para cargar los contratos.</p>
+        </div>
+      </section>
+
+      <section class="admin-view" id="view-solicitudes" aria-labelledby="solicitudes-title" hidden>
+        <div class="admin-view-heading">
+          <div>
+            <p class="eyebrow">Operaciones</p>
+            <h2 class="admin-view-title" id="solicitudes-title">Avisos ciudadanos</h2>
+          </div>
+          <button class="icon-btn" id="refresh-solicitudes" type="button" title="Actualizar avisos" aria-label="Actualizar avisos">↻</button>
+        </div>
+        <div class="admin-filters" role="group" aria-label="Filtrar avisos">
+          <label for="solicitudes-filtro">Estado</label>
+          <select id="solicitudes-filtro">
+            <option value="PENDIENTE">Pendientes</option>
+            <option value="EN_REVISION">En revisión</option>
+            <option value="ATENDIDA">Atendidas</option>
+            <option value="DESCARTADA">Descartadas</option>
+            <option value="TODAS">Todas</option>
+          </select>
+          <span id="solicitudes-count" class="feed-status"></span>
+        </div>
+        <div id="solicitudes-list" class="admin-list" aria-live="polite">
+          <p class="empty">Selecciona esta sección para cargar los avisos.</p>
+        </div>
+      </section>
+
+      <section class="admin-view" id="view-potenciales" aria-labelledby="potenciales-title" hidden>
+        <div class="admin-view-heading"><div><p class="eyebrow">Red de campo</p><h2 class="admin-view-title" id="potenciales-title">Potenciales</h2></div><div class="hero-actions"><button class="icon-btn" data-refresh="potenciales" type="button" title="Actualizar" aria-label="Actualizar potenciales">↻</button><button class="btn btn-primary" data-create="potenciales" type="button">Reclutar</button></div></div>
+        <div id="potenciales-list" class="admin-list" aria-live="polite"><p class="empty">Selecciona esta sección para cargar la red.</p></div>
+      </section>
+
+      <section class="admin-view" id="view-grupos" aria-labelledby="grupos-title" hidden>
+        <div class="admin-view-heading"><div><p class="eyebrow">Red de campo</p><h2 class="admin-view-title" id="grupos-title">Grupos tácticos</h2></div><div class="hero-actions"><button class="icon-btn" data-refresh="grupos" type="button" title="Actualizar" aria-label="Actualizar grupos">↻</button><button class="btn btn-primary" data-create="grupos" type="button">Nuevo grupo</button></div></div>
+        <div id="grupos-list" class="admin-list" aria-live="polite"><p class="empty">Selecciona esta sección para cargar los grupos.</p></div>
+      </section>
+
+      <section class="admin-view" id="view-noticias" aria-labelledby="noticias-admin-title" hidden>
+        <div class="admin-view-heading"><div><p class="eyebrow">Publicación</p><h2 class="admin-view-title" id="noticias-admin-title">Noticias</h2></div><div class="hero-actions"><button class="icon-btn" data-refresh="noticias" type="button" title="Actualizar" aria-label="Actualizar noticias">↻</button><button class="btn btn-primary" data-create="noticias" type="button">Redactar noticia</button></div></div>
+        <div id="noticias-admin-list" class="admin-list" aria-live="polite"><p class="empty">Selecciona esta sección para cargar las noticias.</p></div>
+      </section>
+
+      <section class="admin-view" id="view-zonas" aria-labelledby="zonas-title" hidden>
+        <div class="admin-view-heading"><div><p class="eyebrow">Publicación</p><h2 class="admin-view-title" id="zonas-title">Zonas seguras</h2></div><div class="hero-actions"><button class="icon-btn" data-refresh="zonas" type="button" title="Actualizar" aria-label="Actualizar zonas seguras">↻</button><button class="btn btn-primary" data-create="zonas" type="button">Añadir zona</button></div></div>
+        <div id="zonas-list" class="admin-list" aria-live="polite"><p class="empty">Selecciona esta sección para cargar las zonas.</p></div>
+      </section>
+
+      <section class="admin-view" id="view-monederos" aria-labelledby="monederos-title" hidden>
+        <div class="admin-view-heading"><div><p class="eyebrow">Red de campo</p><h2 class="admin-view-title" id="monederos-title">Monederos</h2><p id="wallet-total" class="request-meta"></p></div><button class="icon-btn" data-refresh="monederos" type="button" title="Actualizar" aria-label="Actualizar monederos">↻</button></div>
+        <div id="monederos-list" class="admin-list" aria-live="polite"><p class="empty">Selecciona esta sección para cargar los saldos.</p></div>
+      </section>
+
+      <section class="admin-view" id="view-informes" aria-labelledby="informes-title" hidden>
+        <div class="admin-view-heading"><div><p class="eyebrow">Clasificado</p><h2 class="admin-view-title" id="informes-title">Archivo restringido</h2></div><button class="icon-btn" data-refresh="informes" type="button" title="Actualizar" aria-label="Actualizar informes">↻</button></div>
+        <div id="informes-list" class="admin-list" aria-live="polite"><p class="empty">Selecciona esta sección para cargar los informes.</p></div>
+      </section>
+
+      <section class="admin-view" id="view-usuarios" aria-labelledby="usuarios-title" hidden>
+        <div class="admin-view-heading"><div><p class="eyebrow">Sistema</p><h2 class="admin-view-title" id="usuarios-title">Usuarios</h2></div><button class="icon-btn" data-refresh="usuarios" type="button" title="Actualizar" aria-label="Actualizar usuarios">↻</button></div>
+        <div id="usuarios-list" class="admin-list" aria-live="polite"><p class="empty">Selecciona esta sección para cargar las cuentas.</p></div>
+      </section>
+
+      <section class="admin-view" id="view-actividad" aria-labelledby="actividad-title" hidden>
+        <div class="admin-view-heading"><div><p class="eyebrow">Sistema</p><h2 class="admin-view-title" id="actividad-title">Registro de actividad</h2></div><button class="icon-btn" data-refresh="actividad" type="button" title="Actualizar" aria-label="Actualizar actividad">↻</button></div>
+        <div id="actividad-list" class="admin-list" aria-live="polite"><p class="empty">Selecciona esta sección para cargar la auditoría.</p></div>
+      </section>
+
+      <section class="admin-view" id="view-incidentes" aria-labelledby="incidentes-title" hidden>
+        <div class="admin-view-heading">
+          <div>
+            <p class="eyebrow">Operaciones</p>
+            <h2 class="admin-view-title" id="incidentes-title">Incidentes</h2>
+          </div>
+          <div class="hero-actions">
+            <button class="icon-btn" id="refresh-incidentes" type="button" title="Actualizar incidentes" aria-label="Actualizar incidentes">↻</button>
+            <button class="btn btn-primary" id="new-incidente" type="button">Nuevo incidente</button>
+          </div>
+        </div>
+        <div id="incidentes-list" class="admin-list" aria-live="polite">
+          <p class="empty">Selecciona esta sección para cargar los incidentes.</p>
+        </div>
+      </section>
+
+      <dialog class="admin-dialog admin-dialog-wide" id="incidente-dialog">
+        <form id="incidente-form" class="form">
+          <p class="eyebrow">Expediente del archivo</p>
+          <h2 id="incidente-form-title">Nuevo incidente</h2>
+          <input name="id" type="hidden">
+          <label><b>Titular público</b><input name="titulo" maxlength="180" required></label>
+          <div class="row">
+            <label><b>Tipo</b><select name="tipo"><option>SECUESTRO</option><option>ASESINATO</option><option>DESAPARICION</option></select></label>
+            <label><b>Estado</b><select name="estado"><option>NO_VERIFICADO</option><option>VERIFICADO</option><option>EN_INVESTIGACION</option><option>RESUELTO</option><option>ARCHIVADO</option></select></label>
+          </div>
+          <label><b>Descripción pública</b><textarea name="descripcionPublica" maxlength="2000" required></textarea></label>
+          <div class="row">
+            <label><b>Barrio</b><input name="barrio" maxlength="80"></label>
+            <label><b>Dirección o referencia</b><input name="direccion" maxlength="160"></label>
+          </div>
+          <div class="row">
+            <label><b>Ciudad</b><input name="ciudad" value="San Francisco" required></label>
+            <label><b>País</b><input name="pais" value="Estados Unidos" required></label>
+          </div>
+          <div class="row">
+            <label><b>Latitud</b><input name="lat" type="number" min="-90" max="90" step="any"></label>
+            <label><b>Longitud</b><input name="lng" type="number" min="-180" max="180" step="any"></label>
+          </div>
+          <div class="row">
+            <label><b>Fecha del incidente</b><input name="fecha" type="datetime-local" required></label>
+            <label><b>Nivel de amenaza (1-5)</b><input name="nivelAmenaza" type="number" min="1" max="5" value="2" required></label>
+          </div>
+          <label><b>Anomalía clasificada</b><textarea name="anomalia" maxlength="2000"></textarea></label>
+          <label class="check-label"><input name="publicado" type="checkbox"><b>Publicar en la web</b></label>
+          <div class="hero-actions">
+            <button class="btn" id="cancel-incidente" type="button">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Guardar incidente</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog class="admin-dialog admin-dialog-wide" id="content-dialog">
+        <form id="content-form" class="form"></form>
+      </dialog>
+
+      <dialog class="admin-dialog" id="wallet-dialog">
+        <form id="wallet-form" class="form">
+          <p class="eyebrow">Ajuste de saldo</p><h2 id="wallet-title">Movimiento</h2>
+          <input name="id" type="hidden">
+          <label><b>Tipo</b><select name="tipo"><option>AJUSTE</option><option>BONUS</option><option>PENALIZACION</option></select></label>
+          <label><b>Importe (USD)</b><input name="importe" type="number" step="0.01" min="0.01" required></label>
+          <label><b>Concepto</b><input name="concepto" maxlength="160" required></label>
+          <div class="hero-actions"><button class="btn" id="cancel-wallet" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Registrar movimiento</button></div>
+        </form>
+      </dialog>
+
+      <dialog class="admin-dialog" id="user-dialog">
+        <form id="user-form" class="form">
+          <p class="eyebrow">Cuenta</p><h2>Editar usuario</h2><input name="id" type="hidden">
+          <label><b>Nombre visible</b><input name="nombre" required></label>
+          <label><b>Email</b><input name="email" type="email" required></label>
+          <label class="check-label"><input name="activo" type="checkbox"><b>Cuenta activa</b></label>
+          <div class="hero-actions"><button class="btn" id="cancel-user" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Guardar</button></div>
+        </form>
+      </dialog>
+
+      <dialog class="admin-dialog" id="password-dialog">
+        <form id="password-form" class="form">
+          <p class="eyebrow">Seguridad</p><h2>Restablecer contraseña</h2><input name="id" type="hidden">
+          <label><b>Nueva contraseña</b><input name="password" type="password" autocomplete="new-password" required></label>
+          <div class="hero-actions"><button class="btn" id="cancel-password" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Cambiar contraseña</button></div>
+        </form>
+      </dialog>
+
+      <dialog class="admin-dialog admin-dialog-wide" id="report-dialog">
+        <form id="report-form" class="form">
+          <p class="eyebrow">Clasificado</p><h2>Informe final</h2>
+          <label><b>Contrato cerrado</b><select name="contratoId" required></select></label>
+          <label><b>Título</b><input name="titulo" required></label>
+          <div class="row"><label><b>Entidad anómala</b><input name="entidad"></label><label><b>Clasificación</b><select name="clasificacion"><option>CONFIDENCIAL</option><option>SECRETO</option><option>ALTO_SECRETO</option><option>OMEGA</option></select></label></div>
+          <label><b>Resumen</b><textarea name="resumen" required></textarea></label>
+          <label><b>Contenido</b><textarea name="contenido" rows="7"></textarea></label>
+          <label><b>Bajas civiles</b><input name="bajasCiviles" type="number" min="0" value="0" required></label>
+          <div class="hero-actions"><button class="btn" id="cancel-report" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Guardar informe</button></div>
+        </form>
+      </dialog>
+
+      <dialog class="admin-dialog" id="crear-contrato-dialog">
+        <form id="crear-contrato-form" class="form">
+          <p class="eyebrow">Abrir caso</p>
+          <h2>Nuevo contrato</h2>
+          <input name="incidenteId" type="hidden">
+          <label><b>Prioridad</b><select name="prioridad"><option>MEDIA</option><option>BAJA</option><option>ALTA</option><option>CRITICA</option></select></label>
+          <label><b>Recompensa (USD)</b><input name="recompensa" type="number" min="0" step="0.01" value="100" required></label>
+          <div class="hero-actions">
+            <button class="btn" id="cancel-crear-contrato" type="button">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Crear contrato</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog class="admin-dialog" id="asignar-dialog">
+        <form id="asignar-form" class="form">
+          <p class="eyebrow">Asignación táctica</p>
+          <h2>Asignar contrato</h2>
+          <input name="contratoId" type="hidden">
+          <label><b>Grupo táctico</b><select name="grupoId" required></select></label>
+          <label><b>Potencial disponible</b><select name="potencialId" required></select></label>
+          <p class="auth-foot">El coste de transporte se calculará y cargará automáticamente al monedero del potencial.</p>
+          <div class="hero-actions">
+            <button class="btn" id="cancel-asignar" type="button">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Confirmar asignación</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog class="admin-dialog" id="convert-dialog">
+        <form id="convert-form" class="form">
+          <p class="eyebrow">Crear expediente</p>
+          <h2>Convertir aviso</h2>
+          <label><b>Titular del incidente</b><input name="titulo" maxlength="180" required></label>
+          <div class="row">
+            <label><b>Prioridad</b><select name="prioridad"><option>MEDIA</option><option>BAJA</option><option>ALTA</option><option>CRITICA</option></select></label>
+            <label><b>Recompensa (USD)</b><input name="recompensa" type="number" min="0" step="0.01" value="100" required></label>
+          </div>
+          <label class="check-label"><input name="publicar" type="checkbox" checked><b>Publicar en la web</b></label>
+          <div class="hero-actions">
+            <button class="btn" id="cancel-convert" type="button">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Crear contrato</button>
+          </div>
+          <div id="convert-status" class="visually-hidden" aria-live="polite"></div>
+        </form>
+      </dialog>
     </div>
   </main>
 
