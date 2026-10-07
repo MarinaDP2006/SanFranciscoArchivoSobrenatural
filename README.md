@@ -23,15 +23,11 @@ El proyecto activo es una aplicación web completa: toda la gestión del archivo
 
 Todo lo que se publica desde la web de gestión (incidentes, noticias, zonas seguras, cierres de casos) aparece en la web pública en el siguiente refresco automático (30 s). Los avisos que envían los ciudadanos desde la web llegan a la gestión y a la base de datos en «Avisos ciudadanos».
 
-> 📘 **¿Empiezas con el proyecto?** Lee el [TUTORIAL.md](TUTORIAL.md): explica cómo arrancar MySQL, la API y la web.
-
 ## Estructura del repositorio
-
 ```
 database/                  Base de datos MySQL
   01_schema.sql            13 tablas, 2 vistas públicas, triggers y usuarios MySQL
-  02_datos.sql             Datos de San Francisco: 3 admins, 10 potenciales, grupos, incidentes,
-                           contratos, monederos, informes, noticias, zonas seguras…
+  02_datos.sql             Datos de San Francisco: 3 admins, 10 potenciales, grupos, incidentes, contratos, monederos, informes, noticias, zonas seguras…
   03_permisos_login_web.sql Permisos mínimos de autenticación para una base ya instalada
 archive-app/               LEGACY (se mantiene en Git, pero no es la aplicación activa)
   core/                    Modelo, DAO JDBC y servicios del backend original
@@ -44,11 +40,9 @@ archive-web/               APLICACIÓN ACTIVA (web + gestión web)
 ```
 
 ## Puesta en marcha (local)
-
 Requisitos: **Java 21**, **Maven 3.9+**, **MySQL Server 8** (o MariaDB 10.6+) y MySQL Workbench para administrar la base gráficamente.
 
 ### 1. Base de datos
-
 ```bash
 mysql -u root -p < database/01_schema.sql
 mysql -u root -p < database/02_datos.sql
@@ -68,7 +62,6 @@ Se crean dos usuarios MySQL con permisos mínimos. `sfa_web` puede leer los dato
 > La web **no puede** leer la anomalía clasificada ni el Archivo Restringido: la API solo tiene acceso a las vistas `v_incidentes_publicos` y `v_noticias_publicas`.
 
 ### 2. Compilar
-
 ```bash
 cd archive-app
 mvn clean package
@@ -89,7 +82,6 @@ Deja esta terminal abierta: la API y la web están sirviéndose juntas. Abre **h
 La aplicación activa es web y no usa Docker ni instaladores `.exe`; la carpeta `archive-app/` conserva el backend Java necesario para MySQL y el código JavaFX legado, pero JavaFX no se usa como interfaz activa.
 
 ### 4. Abrir el acceso de administración web
-
 Con la API funcionando, abre el login:
 
 ```text
